@@ -12,11 +12,11 @@ preprocessing:
 vectorization:
   method: tfidf  # tfidf | bow | both
   tfidf:
-    max_features: 10000
+    max_features: 5000
     ngram_range: [1, 2]
     sublinear_tf: true
-    min_df: 2
+    min_df: 3
   bow:
-    max_features: 10000
+    max_features: 5000
     ngram_range: [1, 1]
-    min_df: 2
+    min_df: 3

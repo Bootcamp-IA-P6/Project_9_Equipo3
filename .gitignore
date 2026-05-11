@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Entornos virtuales
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Datos (no subir datos al repo)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Modelos entrenados
+models/*
+!models/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# Variables de entorno
+.env
+*.env
+secrets.yaml
+
+# IDEs
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlruns/
+mlartifacts/
+
+#jony
+02_preprocessing_v2.ipynb
