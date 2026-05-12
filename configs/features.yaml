@@ -8,6 +8,19 @@ preprocessing:
   lemmatize: true
   min_token_length: 2
   language: en
+  custom_stopwords:
+    - youtube
+    - video
+    - watch
+    - like
+    - comment
+    - channel
+    - stefan
+    - peggy
+    - masri
+    - ferguson
+    - cigar
+    - hubbard
 
 vectorization:
   method: tfidf  # tfidf | bow | both
