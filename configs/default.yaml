@@ -1,0 +1,33 @@
+data:
+  raw_path: data/raw/youtoxic_english_1000.csv
+  id_columns: [CommentId, VideoId]
+  text_column: Text
+  label_column: IsToxic
+  # Other Is* columns are kept for EDA / future levels; only IsToxic is the training target.
+  test_size: 0.2
+  random_state: 42
+
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_mentions: true
+  remove_html: true
+  remove_stopwords: true
+  use_lemmatization: true
+
+features:
+  max_features: 150
+  ngram_range: [1, 1]
+  min_df: 10
+  max_df: 0.85
+
+model:
+  name: logistic_regression
+  C: 0.0003
+  class_weight: balanced
+  max_iter: 2000
+  max_train_test_gap: 0.05
+
+paths:
+  model_file: models/hate_detector.joblib
+  metrics_file: reports/metrics.json
