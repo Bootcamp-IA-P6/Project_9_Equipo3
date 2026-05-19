@@ -57,3 +57,5 @@ mlartifacts/
 06_Optuna_v2.ipynb
 optunaas.ipynb
 07_data_augmentation_v2.ipynb
+src/
+src/app/app.py
