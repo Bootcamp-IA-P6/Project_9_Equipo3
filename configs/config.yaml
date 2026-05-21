@@ -1,0 +1,39 @@
+# Non-secret project config (secrets in .env)
+
+model:
+  path: models/phase4_best.joblib
+  fallback_path: models/phase3_baseline.joblib
+  borderline_low: 0.4
+  borderline_high: 0.6
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+training:
+  processed_csv: data/processed/youtoxic_phase2.csv
+  target: IsToxic
+
+plan_c_v2:
+  frozen_layers: 4
+  head_dropout: 0.4
+  weight_decay: 0.01
+  learning_rate: 1.0e-5
+  label_smoothing: 0.1
+  epochs: 4
+  batch_size: 8
+  early_stopping_patience: 3
+  augment: false
+  augment_max_samples: null
+
+plan_c_v3:
+  frozen_layers: 4
+  head_dropout: 0.4
+  weight_decay: 0.01
+  learning_rate: 5.0e-6
+  label_smoothing: 0.05
+  epochs: 4
+  batch_size: 8
+  early_stopping_patience: 2
+  early_stopping_metric: eval_f1_toxic
+  class_weight: balanced

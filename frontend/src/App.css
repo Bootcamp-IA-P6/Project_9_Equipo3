@@ -1,0 +1,163 @@
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.video-section {
+  background: #212121;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.video-placeholder {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #aaa;
+  font-size: 1.1rem;
+}
+
+.comments h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.comment-form textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: none;
+  border-bottom: 1px solid #3f3f3f;
+  background: transparent;
+  color: #f1f1f1;
+  resize: vertical;
+  font: inherit;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-bottom-color: #3ea6ff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0 1rem;
+}
+
+.form-actions button {
+  background: #3ea6ff;
+  color: #0f0f0f;
+  border: none;
+  border-radius: 18px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comment-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #303030;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #717171;
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-text {
+  margin: 0 0 0.35rem;
+  white-space: pre-wrap;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge.green {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.badge.yellow {
+  background: #f9a825;
+  color: #000;
+}
+
+.badge.red {
+  background: #c62828;
+  color: #fff;
+}
+
+.score {
+  color: #aaa;
+}
+
+.error {
+  color: #ff6b6b;
+  margin-bottom: 0.5rem;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: #272727;
+  color: #f1f1f1;
+  border: 1px solid #3f3f3f;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.app.light {
+  color: #0f0f0f;
+  background: #fff;
+}
+
+.app.light .video-section {
+  background: #f9f9f9;
+}
+
+.app.light .comment-form textarea {
+  color: #0f0f0f;
+  border-bottom-color: #ccc;
+}
+
+.app.light .comment-item {
+  border-bottom-color: #e0e0e0;
+}

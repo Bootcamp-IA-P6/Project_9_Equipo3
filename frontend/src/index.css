@@ -1,0 +1,14 @@
+:root {
+  font-family: Roboto, Arial, sans-serif;
+  line-height: 1.5;
+  color: #f1f1f1;
+  background: #0f0f0f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
