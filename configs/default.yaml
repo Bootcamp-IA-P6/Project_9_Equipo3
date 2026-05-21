@@ -31,3 +31,16 @@ model:
 paths:
   model_file: models/hate_detector.joblib
   metrics_file: reports/metrics.json
+
+# Extra hate-speech datasets mixed into the training set only.
+# The test set always stays pure YouToxic. sample_size takes a balanced
+# (half toxic, half not) subset; set it to null to use the whole dataset.
+external_data:
+  enabled: true
+  random_state: 42
+  davidson:
+    path: data/raw/davidson_labeled_data.csv
+    sample_size: 8000
+  jigsaw:
+    path: data/raw/jigsaw_train.csv
+    sample_size: 30000

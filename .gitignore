@@ -14,6 +14,10 @@ models/*.joblib
 data/processed/*
 !data/processed/.gitkeep
 data/nltk_data/
+
+# External hate-speech datasets (download separately, see README)
+data/raw/davidson_labeled_data.csv
+data/raw/jigsaw_train.csv
 reports/*
 !reports/.gitkeep
 logs/*
