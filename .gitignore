@@ -27,7 +27,7 @@ data/processed/*
 !data/processed/.gitkeep
 
 # Modelos entrenados
-models/*
+#models/*
 !models/.gitkeep
 
 # Logs
@@ -54,8 +54,16 @@ mlruns/
 mlartifacts/
 
 #jony
-06_Optuna_v2.ipynb
-optunaas.ipynb
-07_data_augmentation_v2.ipynb
 src/
 src/app/app.py
+
+#modelos no subidos
+models/roberta_hate_results/
+models/distilbert_results/
+models/best_distilbert/
+models/nb08_distilbert/
+models/nb08_roberta_hate/
+models/nb08_toxic_distilbert/
+
+models/lr_baseline.joblib
+models/best_ensemble.joblib
