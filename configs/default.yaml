@@ -16,14 +16,14 @@ preprocessing:
   use_lemmatization: true
 
 features:
-  max_features: 150
-  ngram_range: [1, 1]
-  min_df: 10
-  max_df: 0.85
+  max_features: 5000
+  ngram_range: [1, 2]
+  min_df: 2
+  max_df: 0.9
 
 model:
   name: logistic_regression
-  C: 0.0003
+  C: 1.0
   class_weight: balanced
   max_iter: 2000
   max_train_test_gap: 0.05
