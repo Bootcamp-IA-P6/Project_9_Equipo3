@@ -1,0 +1,35 @@
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_mentions: true
+  remove_emojis: true
+  remove_special_chars: true
+  remove_stopwords: true
+  lemmatize: true
+  min_token_length: 2
+  language: en
+  custom_stopwords:
+    - youtube
+    - video
+    - watch
+    - like
+    - comment
+    - channel
+    - stefan
+    - peggy
+    - masri
+    - ferguson
+    - cigar
+    - hubbard
+
+vectorization:
+  method: tfidf  # tfidf | bow | both
+  tfidf:
+    max_features: 5000
+    ngram_range: [1, 2]
+    sublinear_tf: true
+    min_df: 3
+  bow:
+    max_features: 5000
+    ngram_range: [1, 1]
+    min_df: 3

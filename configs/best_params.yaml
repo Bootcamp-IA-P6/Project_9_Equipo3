@@ -1,0 +1,15 @@
+winner: LR tuned
+hyperparameters:
+  ngram_range: '1_2'
+  max_features: 4045
+  min_df: 2
+  sublinear_tf: false
+  C: 0.3235215031170205
+results:
+  f1_test: 0.7579
+  f1_train: 0.8987
+  train_test_gap_pp: 14.07
+  cv_test_gap_pp: 4.76
+  roc_auc: 0.81
+  fp: 18
+  fn: 30

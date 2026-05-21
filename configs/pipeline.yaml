@@ -1,0 +1,19 @@
+pipeline:
+  random_state: 42
+  test_size: 0.2
+  cv_folds: 5
+
+data:
+  raw_path: data/raw/youtoxic_english_1000.csv
+  processed_path: data/processed/v1/comments_with_stats.csv
+  target_binary: IsToxic
+  target_multilabel:
+    - IsAbusive
+    - IsProvocative
+    - IsHatespeech
+    - IsRacist
+    - IsObscene
+  text_column: Text
+  id_column: CommentId
+
+mode: binary  # binary | multilabel
