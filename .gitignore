@@ -54,9 +54,6 @@ mlruns/
 mlartifacts/
 
 #jony
-src/
-src/app/app.py
-
 #modelos no subidos
 models/roberta_hate_results/
 models/distilbert_results/
