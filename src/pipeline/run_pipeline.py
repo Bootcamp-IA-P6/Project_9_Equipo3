@@ -161,6 +161,8 @@ def run_pipeline(model_type: str = "lr") -> dict:
     metrics["run_id"]    = run_id
     metrics["model_path"]= str(model_path)
     evaluator.save_report(metrics, f"exp_{run_id}_{model_type}")
+    metrics["model_type"] = model_type
+    metrics["run_id"] = run_id
     evaluator.save_summary([metrics])
 
     logger.info("=" * 60)

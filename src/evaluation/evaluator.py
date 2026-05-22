@@ -228,19 +228,41 @@ class Evaluator:
 
     def save_summary(self, all_metrics: list[dict], path: str | Path = None) -> Path:
         """
-        Guarda un CSV con todos los experimentos para comparar.
-        Este es el 'reports/summary.csv' que mencionaba el roadmap.
+        Guarda un CSV acumulativo con todos los experimentos.
+        Si summary.csv ya existe, agrega nuevas filas.
         """
+
         path = Path(path or self.output_dir / "summary.csv")
-        df = pd.DataFrame(all_metrics)
+
+        # Nuevo dataframe
+        new_df = pd.DataFrame(all_metrics)
+
+        # Si ya existe un summary anterior → cargarlo
+        if path.exists():
+            old_df = pd.read_csv(path)
+
+            # Concatenar viejo + nuevo
+            df = pd.concat([old_df, new_df], ignore_index=True)
+
+            # Evitar duplicados por run_id si existe
+            if "run_id" in df.columns:
+                df = df.drop_duplicates(subset=["run_id"], keep="last")
+
+        else:
+            df = new_df
 
         # Ordenar por F1 descendente
         if "f1_weighted" in df.columns:
             df = df.sort_values("f1_weighted", ascending=False)
 
+        # Guardar actualizado
         df.to_csv(path, index=False)
-        logger.info(f"Summary guardado: {path}")
-        print(df[["model", "f1_weighted", "roc_auc", "fp", "fn"]].to_string(index=False))
+
+        logger.info(f"Summary actualizado: {path}")
+
+        cols = [c for c in ["model", "f1_weighted", "roc_auc", "fp", "fn"] if c in df.columns]
+        print(df[cols].to_string(index=False))
+
         return path
 
     # ── Interno ──────────────────────────────────────────────────────────────
