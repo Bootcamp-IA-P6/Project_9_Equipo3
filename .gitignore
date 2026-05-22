@@ -64,3 +64,15 @@ models/nb08_toxic_distilbert/
 
 models/lr_baseline.joblib
 models/best_ensemble.joblib
+
+
+# Experiments
+models/experiments/
+
+# Reports experiments
+reports/v2/pipeline/
+
+
+# Python cache
+__pycache__/
+*.pyc
