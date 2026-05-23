@@ -1,7 +1,8 @@
 # Resultados y comparativa de modelos
 
 Datos: [`reports/summary.csv`](../reports/summary.csv)  
-Hiperparámetros: [`configs/best_params.yaml`](../configs/best_params.yaml)
+Hiperparámetros: [`configs/best_params.yaml`](../configs/best_params.yaml)  
+**Informe técnico completo:** [`reports/final_report.es.md`](../reports/final_report.es.md) · [EN](../reports/final_report.md)
 
 ## Mejor modelo sklearn (producción)
 

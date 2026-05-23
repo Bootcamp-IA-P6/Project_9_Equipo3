@@ -203,6 +203,13 @@ Plots and EDA: `reports/v2/`. Per-run artifacts: `reports/pipeline/{lr,rf,xgboos
 
 ---
 
+## Technical results report
+
+Full write-up (decisions, metrics, error analysis, limitations, roadmap):
+
+- **English:** [reports/final_report.md](reports/final_report.md)
+- **Español:** [reports/final_report.es.md](reports/final_report.es.md)
+
 ## Model comparison
 
 Canonical table: [`reports/summary.csv`](reports/summary.csv)  
@@ -237,3 +244,4 @@ Covers preprocessor, vectorizer, model binary output, and `/predict` response sh
 | [docs/PIPELINE.md](docs/PIPELINE.md) | [docs/PIPELINE.es.md](docs/PIPELINE.es.md) |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | [docs/ARCHITECTURE.es.md](docs/ARCHITECTURE.es.md) |
 | [docs/RESULTS.md](docs/RESULTS.md) | [docs/RESULTS.es.md](docs/RESULTS.es.md) |
+| [reports/final_report.md](reports/final_report.md) | [reports/final_report.es.md](reports/final_report.es.md) |

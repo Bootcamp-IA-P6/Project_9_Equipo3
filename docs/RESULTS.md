@@ -1,7 +1,8 @@
 # Model results and comparison
 
 Canonical data: [`reports/summary.csv`](../reports/summary.csv)  
-Tuned hyperparameters: [`configs/best_params.yaml`](../configs/best_params.yaml)
+Tuned hyperparameters: [`configs/best_params.yaml`](../configs/best_params.yaml)  
+**Full technical report:** [`reports/final_report.md`](../reports/final_report.md) · [ES](../reports/final_report.es.md)
 
 ## Best sklearn model (production)
 

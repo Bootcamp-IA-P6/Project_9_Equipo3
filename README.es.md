@@ -140,6 +140,11 @@ Gráficos EDA: `reports/v2/`.
 
 ---
 
+## Informe técnico de resultados
+
+- **Español:** [reports/final_report.es.md](reports/final_report.es.md)
+- **English:** [reports/final_report.md](reports/final_report.md)
+
 ## Comparativa de modelos
 
 Tabla canónica: [`reports/summary.csv`](reports/summary.csv)  
@@ -169,3 +174,4 @@ pytest tests/ -v
 | [docs/PIPELINE.es.md](docs/PIPELINE.es.md) | [docs/PIPELINE.md](docs/PIPELINE.md) |
 | [docs/ARCHITECTURE.es.md](docs/ARCHITECTURE.es.md) | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | [docs/RESULTS.es.md](docs/RESULTS.es.md) | [docs/RESULTS.md](docs/RESULTS.md) |
+| [reports/final_report.es.md](reports/final_report.es.md) | [reports/final_report.md](reports/final_report.md) |
