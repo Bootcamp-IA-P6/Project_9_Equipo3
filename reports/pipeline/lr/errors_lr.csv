@@ -1,0 +1,53 @@
+text,real,pred,prob_toxic,tipo_error
+fuck time freeway,False,True,0.6415007346665947,falso_positivo
+man officer get lucky life still ruin juror would convict black way,False,True,0.5716710269810534,falso_positivo
+police car purposefully leave destroy get anger instead business cost destruction car pass state taxpayer,False,True,0.503612868866628,falso_positivo
+traffic bad enough,False,True,0.5106084760625215,falso_positivo
+people get shoot everyday come one get attention,False,True,0.5624723994474933,falso_positivo
+feel black america understand everything,False,True,0.5146301249872574,falso_positivo
+head read protester take far,False,True,0.513207971133486,falso_positivo
+stand side freeway instead block thousand car,False,True,0.5251542626479927,falso_positivo
+lose shit guy lmao,False,True,0.5746623918084022,falso_positivo
+take medical cannabis guy couple face book fight page mean necessarily aggressive,False,True,0.5036380541041356,falso_positivo
+cop shoot white guy would riot since shoot black guy everyone seem think black look evidence skin color everyone always throw race card crap,False,True,0.5970904349206777,falso_positivo
+good job guy raise taxis,False,True,0.5008660396035933,falso_positivo
+people translate conversation funniest sad shit ever funny get wrong sad people reach every direction find hole get cop,False,True,0.5340463945332806,falso_positivo
+weird white pretext police officer white must less risk would black police officer would kill white would take year prison I may white white black equal,False,True,0.5870245290128406,falso_positivo
+obama show hos face city yet support sad,False,True,0.5103506243372347,falso_positivo
+everyone say black people white people white woman get shoot rubber bullet come next day two black people help walk,False,True,0.5578356563804213,falso_positivo
+real question need ask would mike brown rush cop already draw weapon already shoot way answer show true color think black male would disregard life kill cop escalate punishment probation petty theft death penalty kill cop utterly absurd truly believe someone go start college next week would sorry racist,False,True,0.5443162086132329,falso_positivo
+agree police action kill boy mean protest loot destroy neighbourhood stupid make people want support struggle,False,True,0.5236958135962575,falso_positivo
+call peacefully protest burn car lol,False,True,0.5116161189286824,falso_positivo
+spread word year unarmed white guy shoot black cop,False,True,0.5538455860954972,falso_positivo
+gas grenade pepper spray knight stick would apply,False,True,0.5147355292873231,falso_positivo
+police shoot black guy black riot black shoot black happen,False,True,0.5956566810148107,falso_positivo
+amen peggy hubbard color make difference person inside innocent nine year old little girl one attention people want cause chaos black white go exactly obama want look country mess admire courage tell peggy hubbard,True,False,0.40495127807343234,falso_negativo
+ah beautiful,True,False,0.46757257821393866,falso_negativo
+bullshit stef police officer pepper spray stun gun number non lethal method immediate disposal real question version event hold true gun first option officer go,True,False,0.4753839163064213,falso_negativo
+stefan ever victim police discrimination game white supremacy deny involvement play victim black complain never fail,True,False,0.4502233884252265,falso_negativo
+bottom line michael brown drug addict criminal violent criminal anyone feel bad get kill unless criminal,True,False,0.4974324511920543,falso_negativo
+jimmy dore dickhead square,True,False,0.46757257821393866,falso_negativo
+blacklivesmatter build deceit lie,True,False,0.45884138016676057,falso_negativo
+educate dumb assss rap rap real people dispise,True,False,0.42647914768536693,falso_negativo
+push clerk around really make I lose sympathy definitely tell guy likely dick.but hell need new tv might well riot go loot one honor,True,False,0.4460833711504373,falso_negativo
+michael brown thug god bless thin blue line graduate police academy december,True,False,0.44310473756276547,falso_negativo
+protect serve people michael brown guy deserve kill cry,True,False,0.4930152565241669,falso_negativo
+zimmerman case full shit smell hate seep bring rap music listen sound cloud nothing make charcter look foolish dangerous possible ever want respond fuck az well> go much effort destroy mike browns character bring smoking habit nothing get shoot tone perfectly choose word use really make brown look unstable look much detail go trhu slay browns character,True,False,0.4835229120264079,falso_negativo
+far base even call propaganda bs,True,False,0.43974023289369363,falso_negativo
+patient ever ambulance get injure bad make hospital protestor liable die protestor charge man slaughter,True,False,0.46034973043545707,falso_negativo
+police problem protest cause black criminal let forget blame address elephant room,True,False,0.4891559683461648,falso_negativo
+think gentle giant would kill song rap talk bad,True,False,0.45653873903001546,falso_negativo
+black person say thank speak truth many black cause trouble dress idiot bring trouble kill eachother cause crime complain police good glad parent grow I properly stay away garbage,True,False,0.46329948394601783,falso_negativo
+rich brat,True,False,0.48192463449669426,falso_negativo
+dude lie azz racist cracka,True,False,0.4780534833910638,falso_negativo
+hahahahaha guy ed bassmaster character always teste ed bassmaster semi retarded character cross eyed guy,True,False,0.47755160633262406,falso_negativo
+revolution set neighbourhood fire good job burn suburb cop live make homeless achive anything,True,False,0.47050296796324714,falso_negativo
+one pair work boot steal ferguson riot,True,False,0.4605386101821508,falso_negativo
+wish mr masri dead,True,False,0.46328501485243195,falso_negativo
+cop pig,True,False,0.4794382794479078,falso_negativo
+know chimper compassion mud pump heart,True,False,0.41790271212899205,falso_negativo
+niggas love victim situation separate black people need,True,False,0.4715061903422615,falso_negativo
+let get straight present fact mass media beginning yr old legal aspect adult rob convince store criminal later flee seen aprehende police resist arrest altercation occur two police every case similar use force criminal kill killing go court randomly select jury view evidence hear witness pertain case radom jury reach unanimous verdict guilty sorry protestor democracy,True,False,0.4488888614734203,falso_negativo
+motherfucker angry understand,True,False,0.4807313546725058,falso_negativo
+hell care people peacefully protest police feel threaten go act say blow fucker face tg follow riot,True,False,0.49462955392154545,falso_negativo
+let elite divide conquer tactic work want keep racially divide never rise,True,False,0.46885478185552015,falso_negativo
