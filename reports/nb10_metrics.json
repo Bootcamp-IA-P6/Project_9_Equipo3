@@ -1,0 +1,33 @@
+{
+  "notebook": "10_tfidf_limited_v2",
+  "model_path": "models/lr_tfidf_limited.joblib",
+  "hyperparameters": {
+    "word_ngram_range": [
+      1,
+      2
+    ],
+    "word_max_features": 500,
+    "char_ngram_range": [
+      3,
+      5
+    ],
+    "char_max_features": 500,
+    "min_df": 5,
+    "C": 0.01,
+    "classifier": "logistic_regression_l2",
+    "select_k": null
+  },
+  "metrics": {
+    "name": "Hybrid TF-IDF + LR (nb10)",
+    "f1_train": 0.7691,
+    "f1_test": 0.7431,
+    "train_test_gap_pp": 2.6,
+    "gap_ok": true,
+    "f1_test_ok": true,
+    "roc_auc": 0.7975
+  },
+  "constraints": {
+    "gap_max_pp": 5.0,
+    "f1_test_min": 0.7
+  }
+}

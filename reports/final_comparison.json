@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-05-21",
+  "branch": "feat/10-pipeline",
+  "source": "Executed notebook outputs (v2 series); not from stale hand-edited files",
+  "overfitting_rule_agents": "|train - test| < 5 percentage points on accuracy AND f1_toxic",
+  "overfitting_rule_notebooks": "cv_test_gap = |cv_mean - f1_test| in 06_tuning_clean_v2 (used as rubrica)",
+  "models": [
+    {
+      "name": "lr_baseline",
+      "notebook": "04_baseline_v2",
+      "f1_test": 0.7531,
+      "train_test_gap_pp": 10.91,
+      "cv_test_gap_pp": 5.17,
+      "passes_agents_train_test_gap": false,
+      "passes_notebook_cv_test_gap": false
+    },
+    {
+      "name": "lr_tuned_optuna",
+      "notebook": "06_tuning_clean_v2",
+      "artifact": "models/final_model.joblib",
+      "f1_test": 0.7579,
+      "train_test_gap_pp": 14.07,
+      "cv_test_gap_pp": 4.76,
+      "passes_agents_train_test_gap": false,
+      "passes_notebook_cv_test_gap": true,
+      "winner_classical_f1": true
+    },
+    {
+      "name": "rf_tuned_optuna",
+      "notebook": "06_tuning_clean_v2",
+      "f1_test": 0.6924,
+      "train_test_gap_pp": 12.09,
+      "cv_test_gap_pp": 2.15,
+      "passes_agents_train_test_gap": false,
+      "passes_notebook_cv_test_gap": true
+    },
+    {
+      "name": "linear_svc",
+      "notebook": "06_tuning_clean_v2",
+      "f1_test": 0.725,
+      "train_test_gap_pp": 23.99,
+      "cv_test_gap_pp": 4.03,
+      "passes_agents_train_test_gap": false,
+      "passes_notebook_cv_test_gap": true
+    },
+    {
+      "name": "rf_ensemble",
+      "notebook": "05_ensemble_v2",
+      "artifact": "models/best_ensemble.joblib",
+      "f1_test_weighted": null,
+      "train_test_gap_pp": 10.91,
+      "passes_agents_train_test_gap": false,
+      "note": "artifact may need re-run if missing on disk"
+    },
+    {
+      "name": "distilbert_base_finetuned",
+      "notebook": "08_transformers_clean_v2",
+      "artifact": "models/finetuned_hf",
+      "f1_weighted": 0.7735,
+      "roc_auc": 0.8561,
+      "passes_agents_train_test_gap": null,
+      "winner_overall_f1": true,
+      "note": "AGENTS gap not logged in model_metadata.json; compute train vs test in notebook"
+    }
+  ],
+  "recommendation": {
+    "highest_f1_classical": "lr_tuned_optuna (models/final_model.joblib)",
+    "highest_f1_overall": "distilbert_base_finetuned (models/finetuned_hf)",
+    "passes_notebook_cv_rubric": ["lr_tuned_optuna", "rf_tuned_optuna", "linear_svc"],
+    "passes_agents_train_test_gap_among_top": "none_verified",
+    "branch_report": "reports/BRANCH_REPORT_feat-10-pipeline.md"
+  }
+}

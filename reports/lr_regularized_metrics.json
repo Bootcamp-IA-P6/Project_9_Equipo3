@@ -1,0 +1,43 @@
+{
+  "model": "LogisticRegression_L2",
+  "notebook": "09_l2_regularization_v2",
+  "target": "IsToxic",
+  "hyperparameters": {
+    "C": 0.01,
+    "solver": "lbfgs",
+    "class_weight": "balanced",
+    "min_df": 5,
+    "max_features": 500,
+    "ngram_range": [
+      1,
+      1
+    ],
+    "sublinear_tf": false
+  },
+  "metrics": {
+    "name": "LR L2 regularized (nb09)",
+    "f1_train": 0.7957,
+    "f1_test": 0.7473,
+    "train_test_gap_pp": 4.84,
+    "gap_ok": true,
+    "f1_test_ok": true,
+    "roc_auc": 0.8026,
+    "cv_mean": 0.6956,
+    "cv_std": 0.0251,
+    "fp": 18,
+    "fn": 32
+  },
+  "baseline_nb06": {
+    "name": "LR tuned (nb06)",
+    "f1_train": 0.8987,
+    "f1_test": 0.7579,
+    "train_test_gap_pp": 14.07,
+    "gap_ok": false,
+    "f1_test_ok": true,
+    "roc_auc": 0.81,
+    "cv_mean": 0.7104,
+    "cv_std": 0.0353,
+    "fp": 18,
+    "fn": 30
+  }
+}

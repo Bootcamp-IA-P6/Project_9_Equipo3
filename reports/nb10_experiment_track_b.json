@@ -1,0 +1,33 @@
+{
+  "strategy": "FeatureUnion(word 1-2 + char 3-5, mf=500) | LR-only(C=0.01)",
+  "experiment": "track_b_nb10",
+  "baseline": {
+    "f1_test": 0.7473,
+    "gap_pp": 4.84
+  },
+  "hyperparameters": {
+    "word_ngram_range": [
+      1,
+      2
+    ],
+    "word_max_features": 500,
+    "char_ngram_range": [
+      3,
+      5
+    ],
+    "char_max_features": 500,
+    "min_df": 5,
+    "C": 0.01,
+    "select_k": null
+  },
+  "result": {
+    "f1_train": 0.7691,
+    "f1_test": 0.7431,
+    "train_test_gap_pp": 2.6,
+    "gap_ok": true,
+    "f1_test_ok": true,
+    "roc_auc": 0.7975
+  },
+  "status": "SIMILAR",
+  "model_path": "models/nb10_experiment_track_b.joblib"
+}

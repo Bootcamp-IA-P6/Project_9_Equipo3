@@ -1,0 +1,81 @@
+{
+  "notebook": "11_distilbert_frozen_v2",
+  "model_id": "unitary/toxic-bert",
+  "model_path": "models/toxic_bert_frozen",
+  "freeze": "penultimate_and_last_encoder_blocks_and_head",
+  "lr_penultimate": 5e-06,
+  "lr_last_and_head": 2e-05,
+  "label_smoothing": 0.1,
+  "weight_decay": 0.01,
+  "gap_early_stop_pp": 5.0,
+  "metrics": {
+    "f1_train": 0.8218,
+    "f1_test": 0.7949,
+    "train_test_gap_pp": 2.69,
+    "gap_ok": true,
+    "f1_test_ok": true,
+    "roc_auc": 0.8919,
+    "epoch_history": [
+      {
+        "epoch": 1,
+        "f1_train": 0.7774680306905372,
+        "f1_test": 0.7684793001729224,
+        "gap_pp": 0.8988730517614729
+      },
+      {
+        "epoch": 2,
+        "f1_train": 0.786335734577922,
+        "f1_test": 0.7695353535353536,
+        "gap_pp": 1.6800381042568424
+      },
+      {
+        "epoch": 3,
+        "f1_train": 0.7922986267677803,
+        "f1_test": 0.7643762481356962,
+        "gap_pp": 2.7922378632084133
+      },
+      {
+        "epoch": 4,
+        "f1_train": 0.7929078089922303,
+        "f1_test": 0.78,
+        "gap_pp": 1.2907808992230319
+      },
+      {
+        "epoch": 5,
+        "f1_train": 0.8045681131253982,
+        "f1_test": 0.79,
+        "gap_pp": 1.4568113125398185
+      },
+      {
+        "epoch": 6,
+        "f1_train": 0.809520202020202,
+        "f1_test": 0.79,
+        "gap_pp": 1.9520202020201993
+      },
+      {
+        "epoch": 7,
+        "f1_train": 0.8104792676231927,
+        "f1_test": 0.79,
+        "gap_pp": 2.047926762319263
+      },
+      {
+        "epoch": 8,
+        "f1_train": 0.8154996843748961,
+        "f1_test": 0.7898094565984475,
+        "gap_pp": 2.569022777644858
+      },
+      {
+        "epoch": 9,
+        "f1_train": 0.8218082548840977,
+        "f1_test": 0.7949122409407974,
+        "gap_pp": 2.6896013943300323
+      },
+      {
+        "epoch": 10,
+        "f1_train": 0.8205860797462489,
+        "f1_test": 0.7949122409407974,
+        "gap_pp": 2.5673838805451488
+      }
+    ]
+  }
+}

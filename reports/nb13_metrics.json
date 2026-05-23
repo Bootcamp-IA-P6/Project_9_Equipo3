@@ -1,0 +1,72 @@
+{
+  "notebook": "13_lsa_bottleneck_v2",
+  "n_components": 100,
+  "classifier": "LogisticRegression",
+  "metrics": {
+    "name": "LSA LogisticRegression (nb13)",
+    "f1_train": 0.7579,
+    "f1_test": 0.717,
+    "train_test_gap_pp": 4.09,
+    "gap_ok": true,
+    "f1_test_ok": true,
+    "roc_auc": 0.7858,
+    "cv_mean": 0.6918,
+    "cv_std": 0.0167,
+    "fp": 21,
+    "fn": 35,
+    "cm": [
+      [
+        87,
+        21
+      ],
+      [
+        35,
+        57
+      ]
+    ]
+  },
+  "comparison": [
+    {
+      "classifier": "LogisticRegression",
+      "n_components": 100,
+      "f1_test": 0.717,
+      "train_test_gap_pp": 4.09,
+      "gap_ok": true
+    },
+    {
+      "classifier": "LogisticRegression",
+      "n_components": 150,
+      "f1_test": 0.7324,
+      "train_test_gap_pp": 4.94,
+      "gap_ok": true
+    },
+    {
+      "classifier": "LogisticRegression",
+      "n_components": 200,
+      "f1_test": 0.7271,
+      "train_test_gap_pp": 5.74,
+      "gap_ok": false
+    },
+    {
+      "classifier": "LinearSVC",
+      "n_components": 100,
+      "f1_test": 0.7181,
+      "train_test_gap_pp": 6.77,
+      "gap_ok": false
+    },
+    {
+      "classifier": "LinearSVC",
+      "n_components": 150,
+      "f1_test": 0.7186,
+      "train_test_gap_pp": 7.97,
+      "gap_ok": false
+    },
+    {
+      "classifier": "LinearSVC",
+      "n_components": 200,
+      "f1_test": 0.6968,
+      "train_test_gap_pp": 13.06,
+      "gap_ok": false
+    }
+  ]
+}
