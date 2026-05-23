@@ -1,0 +1,57 @@
+# youtube_hate_detector — API + Streamlit UI
+# Start everything:  docker compose up --build
+# Stop:             docker compose down
+
+name: youtube_hate_detector
+
+services:
+  api:
+    build: .
+    image: youtube_hate_detector:latest
+    container_name: youtube_hate_detector-api
+    command:
+      - uvicorn
+      - src.api.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_NAME: "LR + TF-IDF (local)"
+      ENV: production
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      NLTK_DATA: /app/nltk_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  streamlit:
+    # Reuses the image built by `api` — do not add `build:` here (parallel builds race on the same tag)
+    image: youtube_hate_detector:latest
+    container_name: youtube_hate_detector-streamlit
+    command:
+      - streamlit
+      - run
+      - src/app/app.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.headless=true
+      - --browser.gatherUsageStats=false
+    ports:
+      - "8501:8501"
+    environment:
+      MODEL_NAME: "LR + TF-IDF (local)"
+      ENV: production
+      API_URL: http://api:8000
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      NLTK_DATA: /app/nltk_data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
