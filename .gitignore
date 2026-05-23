@@ -80,3 +80,4 @@ __pycache__/
 # Custom files
 AGENTS.md
 .matplotlib_cache/
+docs/project-ai-nlp.pdf
