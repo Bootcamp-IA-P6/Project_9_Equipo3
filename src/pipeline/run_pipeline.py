@@ -122,23 +122,19 @@ def run_pipeline(model_type: str = "lr") -> dict:
 
     # ── FASE 6: Evaluación en test ────────────────────────────────────────────
     logger.info("FASE 6 — Evaluación en test")
-    evaluator = Evaluator(output_dir=PROJECT_ROOT / "reports" / "v2" / "pipeline")
+    report_dir = PROJECT_ROOT / "reports" / "pipeline" / model_type
+    evaluator = Evaluator(output_dir=report_dir)
 
-    y_pred  = model.predict(X_test_clean)
-    y_proba = model.predict_proba(X_test_clean)[:, 1]
-
-    metrics = evaluator.evaluate(
-        model, X_test_clean, y_test,
-        model_name  = model_type.upper(),
-        X_train     = X_train_clean,
-        y_train     = y_train,
-        cv_results  = cv_results,
+    metrics = evaluator.evaluate_and_report(
+        model,
+        X_test_clean,
+        y_test,
+        model_name=model_type.upper(),
+        X_train=X_train_clean,
+        y_train=y_train,
+        cv_results=cv_results,
+        summary_path=PROJECT_ROOT / "reports" / "summary.csv",
     )
-
-    # Visualizaciones
-    evaluator.plot_confusion_matrix(y_test, y_pred, model_type.upper())
-    evaluator.plot_roc_curve(y_test, y_proba, model_type.upper())
-    evaluator.error_analysis(X_test_clean, y_test, y_pred, y_proba)
 
     # ── FASE 7: Guardado del modelo ───────────────────────────────────────────
     logger.info("FASE 7 — Guardado del modelo")
@@ -160,10 +156,10 @@ def run_pipeline(model_type: str = "lr") -> dict:
     logger.info("FASE 9 — Generando informes")
     metrics["run_id"]    = run_id
     metrics["model_path"]= str(model_path)
-    evaluator.save_report(metrics, f"exp_{run_id}_{model_type}")
     metrics["model_type"] = model_type
     metrics["run_id"] = run_id
-    evaluator.save_summary([metrics])
+    metrics["model_family"] = "sklearn_baseline"
+    evaluator.save_report(metrics, f"exp_{run_id}_{model_type}")
 
     logger.info("=" * 60)
     logger.info(f"✅ Pipeline completado — F1={metrics['f1_weighted']:.4f}")

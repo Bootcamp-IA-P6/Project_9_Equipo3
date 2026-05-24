@@ -5,13 +5,17 @@ Evaluación estandarizada de modelos.
 Genera métricas, visualizaciones e informes JSON.
 
 Uso:
-    evaluator = Evaluator(output_dir="reports/pipeline")
-    metrics = evaluator.evaluate(model, X_test, y_test, model_name="LR")
-    evaluator.error_analysis(X_test, y_test, preds, probs)
-    evaluator.save_summary(all_metrics, path="reports/summary.csv")
+    evaluator = Evaluator(output_dir="reports/pipeline/lr")
+    metrics = evaluator.evaluate_and_report(
+        model, X_test, y_test, model_name="LR",
+        summary_path="reports/summary.csv",
+    )
 """
 
 import json
+import re
+from collections import Counter
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -27,6 +31,9 @@ from sklearn.metrics import (
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+DEFAULT_SUMMARY_PATH = Path("reports/summary.csv")
+_TOKEN_RE = re.compile(r"[a-záéíóúñ'][a-záéíóúñ]{2,}")
 
 
 class Evaluator:
@@ -109,6 +116,56 @@ class Evaluator:
         self._print_summary(metrics)
         return metrics
 
+    def evaluate_and_report(
+        self,
+        model,
+        X_test,
+        y_test,
+        model_name: str,
+        X_train=None,
+        y_train=None,
+        cv_results: dict = None,
+        summary_path: str | Path | None = None,
+        n_error_examples: int = 5,
+        show_plots: bool = False,
+    ) -> dict:
+        """
+        Evaluación completa: métricas, gráficos, análisis de errores y summary.csv.
+
+        Usado por run_pipeline; actualiza reports/summary.csv por defecto del proyecto.
+        """
+        metrics = self.evaluate(
+            model, X_test, y_test, model_name,
+            X_train=X_train, y_train=y_train, cv_results=cv_results,
+        )
+
+        y_pred = model.predict(X_test)
+        y_proba = model.predict_proba(X_test)[:, 1]
+
+        cm_path = self.plot_confusion_matrix(
+            y_test, y_pred, model_name, save=True, show=show_plots,
+        )
+        roc_path = self.plot_roc_curve(
+            y_test, y_proba, model_name, save=True, show=show_plots,
+        )
+        errors = self.error_analysis(
+            X_test, y_test, y_pred, y_proba,
+            model_name=model_name, n_examples=n_error_examples,
+        )
+
+        metrics["cm_plot"] = str(cm_path) if cm_path else ""
+        metrics["roc_plot"] = str(roc_path) if roc_path else ""
+        metrics["top_fp_terms"] = ", ".join(
+            f"{t}({c})" for t, c in errors.get("top_fp_terms", [])
+        )
+        metrics["top_fn_terms"] = ", ".join(
+            f"{t}({c})" for t, c in errors.get("top_fn_terms", [])
+        )
+
+        out = Path(summary_path or DEFAULT_SUMMARY_PATH)
+        self.save_summary([metrics], path=out)
+        return metrics
+
     # ── Visualizaciones ──────────────────────────────────────────────────────
     def plot_confusion_matrix(
         self,
@@ -116,6 +173,7 @@ class Evaluator:
         y_pred,
         model_name: str,
         save: bool = True,
+        show: bool = False,
     ) -> Path | None:
         """Genera y guarda la matriz de confusión."""
         cm = confusion_matrix(y_test, y_pred)
@@ -126,21 +184,21 @@ class Evaluator:
             yticklabels=["No tóxico", "Tóxico"],
             linewidths=0.5,
         )
-        ax.set_title(f"{model_name} — Confusion Matrix", fontweight="bold")
+        ax.set_title(f"{model_name} — Matriz de confusión", fontweight="bold")
         ax.set_xlabel("Predicción")
         ax.set_ylabel("Real")
         plt.tight_layout()
 
+        safe = model_name.lower().replace(" ", "_").replace("/", "_")
+        path = self.output_dir / f"cm_{safe}.png"
         if save:
-            safe = model_name.lower().replace(" ", "_").replace("/", "_")
-            path = self.output_dir / f"cm_{safe}.png"
-            plt.savefig(path, dpi=150, bbox_inches="tight")
+            fig.savefig(path, dpi=150, bbox_inches="tight")
+            logger.info(f"Matriz de confusión guardada: {path}")
+        if show:
             plt.show()
-            logger.info(f"Confusion matrix guardada: {path}")
-            return path
-
-        plt.show()
-        return None
+        else:
+            plt.close(fig)
+        return path if save else None
 
     def plot_roc_curve(
         self,
@@ -148,27 +206,28 @@ class Evaluator:
         y_proba,
         model_name: str,
         save: bool = True,
+        show: bool = False,
     ) -> Path | None:
         """Genera y guarda la curva ROC."""
         fig, ax = plt.subplots(figsize=(6, 5))
         RocCurveDisplay.from_predictions(
             y_test, y_proba, ax=ax, name=model_name, color="#7F77DD"
         )
-        ax.plot([0, 1], [0, 1], "--", color="gray", alpha=0.5, label="Random")
+        ax.plot([0, 1], [0, 1], "--", color="gray", alpha=0.5, label="Azar")
         ax.set_title(f"{model_name} — Curva ROC", fontweight="bold")
         ax.legend()
         plt.tight_layout()
 
+        safe = model_name.lower().replace(" ", "_").replace("/", "_")
+        path = self.output_dir / f"roc_{safe}.png"
         if save:
-            safe = model_name.lower().replace(" ", "_").replace("/", "_")
-            path = self.output_dir / f"roc_{safe}.png"
-            plt.savefig(path, dpi=150, bbox_inches="tight")
-            plt.show()
+            fig.savefig(path, dpi=150, bbox_inches="tight")
             logger.info(f"Curva ROC guardada: {path}")
-            return path
-
-        plt.show()
-        return None
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
+        return path if save else None
 
     # ── Análisis de errores ──────────────────────────────────────────────────
     def error_analysis(
@@ -177,6 +236,7 @@ class Evaluator:
         y_test,
         y_pred,
         y_proba,
+        model_name: str = "modelo",
         n_examples: int = 5,
     ) -> dict:
         """
@@ -198,24 +258,44 @@ class Evaluator:
         fp = error_df[(error_df["real"] == 0) & (error_df["pred"] == 1)]
         fn = error_df[(error_df["real"] == 1) & (error_df["pred"] == 0)]
 
-        logger.info(f"Errores: FP={len(fp)} | FN={len(fn)}")
+        top_fp_terms = self._most_common_terms(fp["text"].tolist())
+        top_fn_terms = self._most_common_terms(fn["text"].tolist())
+
+        logger.info(f"Errores {model_name}: FP={len(fp)} | FN={len(fn)}")
 
         print(f"\n{'='*65}")
-        print(f"FALSOS NEGATIVOS — hate speech que NO detectó ({len(fn)} total)")
+        print(f"FALSOS NEGATIVOS — tóxico no detectado ({len(fn)} total)")
+        if top_fn_terms:
+            print("  Términos más frecuentes:", ", ".join(f"{w}({c})" for w, c in top_fn_terms[:8]))
         print(f"{'='*65}")
         for _, row in fn.nsmallest(n_examples, "prob_toxic").iterrows():
-            print(f"  Prob: {row['prob_toxic']:.3f} | {row['text'][:110]}")
+            print(f"  Prob: {row['prob_toxic']:.3f} | {str(row['text'])[:110]}")
             print()
 
         print(f"{'='*65}")
-        print(f"FALSOS POSITIVOS — comentarios OK censurados ({len(fp)} total)")
+        print(f"FALSOS POSITIVOS — seguro marcado como tóxico ({len(fp)} total)")
+        if top_fp_terms:
+            print("  Términos más frecuentes:", ", ".join(f"{w}({c})" for w, c in top_fp_terms[:8]))
         print(f"{'='*65}")
         for _, row in fp.nlargest(n_examples, "prob_toxic").iterrows():
-            print(f"  Prob: {row['prob_toxic']:.3f} | {row['text'][:110]}")
+            print(f"  Prob: {row['prob_toxic']:.3f} | {str(row['text'])[:110]}")
             print()
 
-        return {"fp_examples": fp.head(n_examples).to_dict("records"),
-                "fn_examples": fn.head(n_examples).to_dict("records")}
+        safe = model_name.lower().replace(" ", "_").replace("/", "_")
+        errors_path = self.output_dir / f"errors_{safe}.csv"
+        pd.concat([
+            fp.assign(tipo_error="falso_positivo"),
+            fn.assign(tipo_error="falso_negativo"),
+        ], ignore_index=True).to_csv(errors_path, index=False)
+        logger.info(f"Errores guardados: {errors_path}")
+
+        return {
+            "top_fp_terms": top_fp_terms,
+            "top_fn_terms": top_fn_terms,
+            "fp_examples": fp.head(n_examples).to_dict("records"),
+            "fn_examples": fn.head(n_examples).to_dict("records"),
+            "errors_csv": str(errors_path),
+        }
 
     # ── Reports ──────────────────────────────────────────────────────────────
     def save_report(self, metrics: dict, experiment_id: str) -> Path:
@@ -232,7 +312,8 @@ class Evaluator:
         Si summary.csv ya existe, agrega nuevas filas.
         """
 
-        path = Path(path or self.output_dir / "summary.csv")
+        path = Path(path or DEFAULT_SUMMARY_PATH)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         # Nuevo dataframe
         new_df = pd.DataFrame(all_metrics)
@@ -247,13 +328,15 @@ class Evaluator:
             # Evitar duplicados por run_id si existe
             if "run_id" in df.columns:
                 df = df.drop_duplicates(subset=["run_id"], keep="last")
+            elif "model" in df.columns and "timestamp" in df.columns:
+                df = df.drop_duplicates(subset=["model", "timestamp"], keep="last")
 
         else:
             df = new_df
 
         # Ordenar por F1 descendente
         if "f1_weighted" in df.columns:
-            df = df.sort_values("f1_weighted", ascending=False)
+            df = df.sort_values("f1_weighted", ascending=False, na_position="last")
 
         # Guardar actualizado
         df.to_csv(path, index=False)
@@ -264,6 +347,13 @@ class Evaluator:
         print(df[cols].to_string(index=False))
 
         return path
+
+    @staticmethod
+    def _most_common_terms(texts: list, top_n: int = 10) -> list[tuple[str, int]]:
+        counter: Counter[str] = Counter()
+        for text in texts:
+            counter.update(_TOKEN_RE.findall(str(text).lower()))
+        return counter.most_common(top_n)
 
     # ── Interno ──────────────────────────────────────────────────────────────
     def _print_summary(self, metrics: dict) -> None:

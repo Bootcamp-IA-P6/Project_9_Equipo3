@@ -76,3 +76,8 @@ reports/v2/pipeline/
 # Python cache
 __pycache__/
 *.pyc
+
+# Custom files
+AGENTS.md
+.matplotlib_cache/
+docs/project-ai-nlp.pdf
