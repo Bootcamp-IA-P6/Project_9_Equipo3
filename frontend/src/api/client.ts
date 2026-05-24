@@ -54,13 +54,30 @@ export function getModels() {
   return request<{ available: string[]; active: string }>("/models");
 }
 
-export function getModelsStatus() {
-  return request<{ models: ModelStatusEntry[]; active: string }>("/models/status");
+export async function getModelsStatus() {
+  try {
+    return await request<{ models: ModelStatusEntry[]; active: string }>("/models/status");
+  } catch (e) {
+    if (e instanceof Error && e.message.toLowerCase().includes("not found")) {
+      const legacy = await getModels();
+      return {
+        active: legacy.active,
+        models: legacy.available.map((name) => ({
+          name,
+          available: true,
+          reason: null,
+          type: "unknown",
+        })),
+      };
+    }
+    throw e;
+  }
 }
 
 export function setModel(name: string) {
-  return request<{ message: string; model: string }>(`/model/${encodeURIComponent(name)}`, {
-    method: "PUT",
+  return request<{ message: string; model: string }>("/models/select", {
+    method: "POST",
+    body: JSON.stringify({ model_name: name }),
   });
 }
 

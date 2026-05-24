@@ -19,7 +19,18 @@ export function SuggestedRail({ videos, activeId, loadingId, onSelect }: Props) 
           onClick={() => onSelect(v)}
           disabled={loadingId === v.id}
         >
-          <img src={v.thumbnail_url} alt="" className="suggested-thumb" />
+          <img
+            src={v.thumbnail_url}
+            alt=""
+            className="suggested-thumb"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = "1";
+                img.src = `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+              }
+            }}
+          />
           <div className="suggested-info">
             <p className="suggested-title">{v.title}</p>
             <p className="suggested-channel">{v.channel_title}</p>

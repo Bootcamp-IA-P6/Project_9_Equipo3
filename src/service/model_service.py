@@ -14,6 +14,44 @@ from src.service.model_catalog import load_model_catalog
 AVAILABLE_MODELS: dict[str, dict[str, Any]] = load_model_catalog()
 
 _HF_DEPS_MSG = "Install HF deps: uv sync --extra hf"
+_LFS_POINTER_PREFIX = "version https://git-lfs"
+_MIN_LOCAL_HF_WEIGHTS_BYTES = 1_000_000
+
+
+def _is_lfs_pointer_file(path: Path) -> bool:
+    try:
+        if path.stat().st_size > 4096:
+            return False
+        head = path.read_text(encoding="utf-8", errors="ignore")[:80]
+        return head.startswith(_LFS_POINTER_PREFIX)
+    except OSError:
+        return False
+
+
+def local_hf_weights_ok(model_dir: Path) -> tuple[bool, str | None]:
+    """Verify a local HF folder has real weight files (not Git LFS pointers)."""
+    if not model_dir.is_dir():
+        return False, f"Model not found at {model_dir}."
+
+    for weights_name in ("model.safetensors", "pytorch_model.bin"):
+        weights = model_dir / weights_name
+        if not weights.is_file():
+            continue
+        if _is_lfs_pointer_file(weights):
+            return False, (
+                "Weights missing (Git LFS pointer only). "
+                "Run: uv run python scripts/materialize_finetuned_weights.py "
+                "(or: brew install git-lfs && git lfs pull)"
+            )
+        size = weights.stat().st_size
+        if size < _MIN_LOCAL_HF_WEIGHTS_BYTES:
+            return False, (
+                f"{weights_name} is too small ({size} bytes). "
+                "Run: uv run python scripts/materialize_finetuned_weights.py"
+            )
+        return True, None
+
+    return False, "No model.safetensors or pytorch_model.bin in model directory."
 
 
 def hf_deps_available() -> bool:
@@ -49,9 +87,12 @@ def check_model_availability(name: str, project_root: Path | None = None) -> tup
         if not hf_deps_available():
             return False, _HF_DEPS_MSG
         path = root / cfg["model_path"]
-        if not path.exists():
-            return False, f"Model not found at {path}."
-        return True, None
+        ok, reason = local_hf_weights_ok(path)
+        if ok:
+            return True, None
+        if cfg.get("hub_fallback"):
+            return True, reason
+        return False, reason
 
     if model_type == "hf_remote":
         if not hf_deps_available():
@@ -118,9 +159,13 @@ class ModelService:
                 self._load_hf(self.cfg["model_id"])
             elif t == "hf_local":
                 path = self.project_root / self.cfg["model_path"]
-                if not path.exists():
-                    raise FileNotFoundError(f"Model not found at {path}.")
-                self._load_hf(str(path))
+                ok, _reason = local_hf_weights_ok(path)
+                if ok:
+                    self._load_hf(str(path))
+                elif self.cfg.get("hub_fallback"):
+                    self._load_hf(self.cfg["hub_fallback"])
+                else:
+                    raise FileNotFoundError(_reason or f"Model not found at {path}.")
         return self._model
 
     def _load_local(self) -> None:

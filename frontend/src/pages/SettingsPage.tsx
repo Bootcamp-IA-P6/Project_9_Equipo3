@@ -12,6 +12,7 @@ export function SettingsPage() {
   const [testError, setTestError] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [switching, setSwitching] = useState(false);
 
   const loadStatus = () => {
     getModelsStatus()
@@ -38,6 +39,7 @@ export function SettingsPage() {
       return;
     }
     setMessage(null);
+    setSwitching(true);
     try {
       await setModel(name);
       setActive(name);
@@ -46,6 +48,8 @@ export function SettingsPage() {
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to switch model");
       loadStatus();
+    } finally {
+      setSwitching(false);
     }
   };
 
@@ -72,6 +76,9 @@ export function SettingsPage() {
           HF models need <code>uv sync --extra hf</code> locally, or{" "}
           <code>INSTALL_HF=1 docker compose build</code> in Docker.
         </p>
+        {switching && (
+          <p className="hint">Switching model… HF models may take up to a minute on first load.</p>
+        )}
         <div className="model-list">
           {modelStatus.map((m) => (
             <label
@@ -82,7 +89,7 @@ export function SettingsPage() {
                 type="radio"
                 name="model"
                 checked={active === m.name}
-                disabled={!m.available}
+                disabled={!m.available || switching}
                 onChange={() => void switchModel(m.name)}
               />
               <span>

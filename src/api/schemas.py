@@ -69,6 +69,10 @@ class ModelsStatusResponse(BaseModel):
     active: str
 
 
+class SelectModelRequest(BaseModel):
+    model_name: str = Field(..., min_length=1)
+
+
 class ModelInfo(BaseModel):
     name: str
     type: str

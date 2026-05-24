@@ -46,6 +46,18 @@ uv run uvicorn src.api.main:app --reload --port 8000
 
 Verify HF deps: `uv run python -c "import transformers; print('ok')"`.
 
+**Fine-tuned (local HF)** needs real weight files in `models/finetuned_hf/` (not the 134-byte Git LFS pointer). **You do not need Git LFS** if you use:
+
+```bash
+uv sync --extra hf
+uv run python scripts/materialize_finetuned_weights.py
+ls -lh models/finetuned_hf/model.safetensors   # should be ~250 MB+
+```
+
+Optional (if the team pushed weights with Git LFS): `brew install git-lfs`, then `git lfs install` and `git lfs pull`.
+
+Without local weights, the API falls back to `martin-ha/toxic-comment-model` from Hugging Face Hub when you select this model.
+
 | Resource | URL |
 |----------|-----|
 | Swagger | http://localhost:8000/docs |
@@ -60,7 +72,8 @@ Verify HF deps: `uv run python -c "import transformers; print('ok')"`.
 | `GET` | `/videos/suggested` | Metadata for right-rail videos (from `configs/suggested_videos.yaml`) |
 | `GET` | `/models` | Available models |
 | `GET` | `/models/status` | Per-model availability (HF deps, local weights) |
-| `PUT` | `/model/{name}` | Switch active model (warmup-validated) |
+| `POST` | `/models/select` | Switch active model `{"model_name": "..."}` (preferred) |
+| `PUT` | `/model/{name}` | Legacy path-based model switch |
 
 Set `YOUTUBE_API_KEY` in `.env` for real comments and suggested-video thumbnails.
 

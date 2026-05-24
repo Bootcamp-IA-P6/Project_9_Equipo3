@@ -87,7 +87,14 @@ app.include_router(predict.router)
 app.include_router(videos.router)
 
 
-_API_GET_PREFIXES = ("models", "model", "videos", "predict", "health", "docs", "redoc", "openapi")
+_API_PATH_ROOTS = frozenset(
+    {"models", "model", "videos", "predict", "health", "docs", "redoc", "openapi"}
+)
+
+
+def _is_api_spa_path(full_path: str) -> bool:
+    root = full_path.split("/")[0] if full_path else ""
+    return root in _API_PATH_ROOTS
 
 
 def _mount_frontend() -> None:
@@ -99,7 +106,7 @@ def _mount_frontend() -> None:
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
-        if full_path.startswith(_API_GET_PREFIXES):
+        if _is_api_spa_path(full_path):
             from fastapi import HTTPException
 
             raise HTTPException(status_code=404, detail="Not found")

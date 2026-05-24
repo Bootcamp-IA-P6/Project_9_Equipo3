@@ -44,6 +44,10 @@ COPY configs/ configs/
 COPY src/ src/
 COPY models/final_model.joblib models/final_model.joblib
 COPY models/finetuned_hf/ models/finetuned_hf/
+COPY scripts/materialize_finetuned_weights.py scripts/materialize_finetuned_weights.py
+RUN if [ "$INSTALL_HF" = "1" ]; then \
+      uv run python scripts/materialize_finetuned_weights.py || true; \
+    fi
 COPY --from=frontend-build /app/frontend/dist frontend/dist
 COPY .env.example .env.example
 

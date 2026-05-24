@@ -37,7 +37,8 @@
   type: hf_local
   icon: "✨"
   model_path: models/finetuned_hf
-  description: "Locally fine-tuned Hugging Face model (models/finetuned_hf)."
+  hub_fallback: martin-ha/toxic-comment-model
+  description: "Local DistilBERT folder (models/finetuned_hf). Materialize weights if missing."
   speed: "Hardware dependent"
   accuracy: "TBD"
-  requires: "uv sync --extra hf"
+  requires: "uv sync --extra hf; uv run python scripts/materialize_finetuned_weights.py"

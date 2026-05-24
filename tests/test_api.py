@@ -99,6 +99,29 @@ def test_predict_video_demo_comments_differ_by_url(client: TestClient, monkeypat
     assert data1["results"][0]["text"] != data2["results"][0]["text"]
 
 
+def test_finetuned_local_reports_lfs_when_pointer_only():
+    from src.api.state import PROJECT_ROOT
+    from src.service.model_service import check_model_availability
+
+    weights = PROJECT_ROOT / "models" / "finetuned_hf" / "model.safetensors"
+    if not weights.is_file() or weights.stat().st_size >= 4096:
+        pytest.skip("finetuned_hf weights present or missing — LFS pointer test N/A")
+
+    ok, reason = check_model_availability("Fine-tuned (local HF)", PROJECT_ROOT)
+    assert ok is False
+    assert reason is not None
+    assert "materialize" in reason.lower() or "lfs" in reason.lower()
+
+
+def test_select_model_via_post(client: TestClient):
+    response = client.post(
+        "/models/select",
+        json={"model_name": "LR + TF-IDF (local)"},
+    )
+    assert response.status_code == 200
+    assert response.json()["model"] == "LR + TF-IDF (local)"
+
+
 def test_models_status_lists_catalog(client: TestClient):
     response = client.get("/models/status")
     assert response.status_code == 200
