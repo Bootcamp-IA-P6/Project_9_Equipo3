@@ -1,0 +1,15 @@
+# Suggested videos for the watch-page right rail (edit ids only).
+# Prefer embed-friendly videos with comments enabled (avoid Vevo music IDs).
+max_comments: 50
+
+videos:
+  - id: jNQXAC9IVRw
+    note: Me at the zoo — first YouTube upload; comments enabled
+  - id: IEEhzQoKtQU
+    note: 3Blue1Brown — embed-friendly educational
+  - id: dQw4w9WgXcQ
+    note: Rick Astley — usually embeddable
+  - id: e-z0xWm0xK0
+    note: Kurzgesagt — educational, comments on
+  - id: aKydtOUFkeg
+    note: TED-style talk — embed-friendly

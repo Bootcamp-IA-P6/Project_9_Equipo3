@@ -1,0 +1,43 @@
+"LR + TF-IDF (local)":
+  type: local
+  icon: "⚡"
+  description: "Project baseline. No GPU, instant inference."
+  speed: "< 50ms"
+  accuracy: "F1 0.76"
+  requires: "joblib only"
+
+"DistilBERT Toxicity":
+  type: hf_remote
+  icon: "🤖"
+  model_id: martin-ha/toxic-comment-model
+  description: "DistilBERT fine-tuned on toxic comments (Hugging Face Hub)."
+  speed: "~200ms CPU"
+  accuracy: "F1 0.85"
+  requires: "uv sync --extra hf"
+
+"toxic-bert (multilabel)":
+  type: hf_remote
+  icon: "🧠"
+  model_id: unitary/toxic-bert
+  description: "BERT multi-label (Jigsaw). Six toxicity categories (Hugging Face Hub)."
+  speed: "~400ms CPU"
+  accuracy: "F1 0.88"
+  requires: "uv sync --extra hf"
+
+"RoBERTa Toxicity":
+  type: hf_remote
+  icon: "🔬"
+  model_id: s-nlp/roberta_toxicity_classifier
+  description: "RoBERTa fine-tuned for general toxicity (Hugging Face Hub)."
+  speed: "~350ms CPU"
+  accuracy: "F1 0.87"
+  requires: "uv sync --extra hf"
+
+"Fine-tuned (local HF)":
+  type: hf_local
+  icon: "✨"
+  model_path: models/finetuned_hf
+  description: "Locally fine-tuned Hugging Face model (models/finetuned_hf)."
+  speed: "Hardware dependent"
+  accuracy: "TBD"
+  requires: "uv sync --extra hf"

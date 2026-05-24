@@ -1,30 +1,40 @@
-# youtube_hate_detector — shared image for FastAPI + Streamlit services
+# youtube_hate_detector — multi-stage: React + FastAPI (uv)
+FROM node:22-bookworm-slim AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci 2>/dev/null || npm install
+COPY frontend/ ./
+RUN npm run build
+
 FROM python:3.12-slim-bookworm
+
+ARG INSTALL_HF=0
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     NLTK_DATA=/app/nltk_data \
     MODEL_NAME="LR + TF-IDF (local)" \
-    ENV=production
+    ENV=production \
+    INSTALL_HF=${INSTALL_HF}
 
 WORKDIR /app
 
-# System deps for spaCy / sklearn wheels
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential curl \
+    && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# CPU-only PyTorch keeps the image smaller; sufficient for the default local LR model
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir -r requirements.txt \
-    && python -m spacy download en_core_web_sm
+COPY pyproject.toml uv.lock* README.md ./
+RUN if [ "$INSTALL_HF" = "1" ]; then \
+      uv sync --frozen --no-dev --extra hf 2>/dev/null || uv sync --no-dev --extra hf; \
+    else \
+      uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev; \
+    fi
 
-# NLTK corpora used by TextPreprocessor
-RUN python - <<'PY'
+RUN uv run python -m spacy download en_core_web_sm \
+    && uv run python - <<'PY'
 import nltk
 for pkg in ("stopwords", "punkt"):
     nltk.download(pkg, download_dir="/app/nltk_data")
@@ -33,8 +43,13 @@ PY
 COPY configs/ configs/
 COPY src/ src/
 COPY models/final_model.joblib models/final_model.joblib
+COPY models/finetuned_hf/ models/finetuned_hf/
+COPY --from=frontend-build /app/frontend/dist frontend/dist
+COPY .env.example .env.example
 
-# Default env template (overridden by docker-compose)
-COPY env.example .env.example
+EXPOSE 8000
 
-EXPOSE 8000 8501
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=60s \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uv", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

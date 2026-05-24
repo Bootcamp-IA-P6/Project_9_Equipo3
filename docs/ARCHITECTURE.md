@@ -1,66 +1,46 @@
-# System architecture
+# Architecture — youtube_hate_detector
 
-## Components
+## Runtime (production)
 
 ```mermaid
-flowchart TB
-  subgraph data [Data layer]
-    CSV[data/raw/youtoxic_english_1000.csv]
-    CFG[configs/*.yaml]
-  end
-
-  subgraph training [Training]
-    PIPE[run_pipeline.py]
-    PRE[TextPreprocessor]
-    BL[build_model LR RF XGB]
-    EV[Evaluator]
-    CSV --> PIPE
-    CFG --> PIPE
-    PIPE --> PRE --> BL --> EV
-    EV --> SUM[reports/summary.csv]
-    BL --> JOB[models/experiments/]
-  end
-
-  subgraph inference [Inference]
-    MS[ModelService]
-    JOB2[models/final_model.joblib]
-    JOB2 --> MS
-    API[FastAPI src/api/main.py]
-    UI[Streamlit src/app/app.py]
-    MS --> API
-    MS --> UI
-  end
+flowchart LR
+  Browser[React SPA]
+  API[FastAPI :8000]
+  MS[ModelService]
+  YT[YouTube Data API]
+  Browser -->|HTTP JSON| API
+  API --> MS
+  API --> YT
 ```
 
-## Module map
+- **UI:** `frontend/` built to `frontend/dist`, served by FastAPI `StaticFiles` in production.
+- **Inference:** Only `ModelService` in `src/service/` loads models.
+- **Catalog:** `configs/model_catalog.yaml` — add models without React changes.
+- **Suggested videos:** `configs/suggested_videos.yaml` — YouTube video IDs for the right rail.
 
-| Module | Responsibility |
-|--------|----------------|
-| `src/data/loader.py` | Load raw CSV, optional processed paths |
-| `src/features/text_preprocessor.py` | Clean and lemmatize text |
-| `src/features/vectorizer.py` | Standalone TF-IDF (notebooks); baselines embed TF-IDF in sklearn `Pipeline` |
-| `src/models/baseline.py` | `LRModel`, `RFModel`, `XGBModel`, `build_model()` |
-| `src/evaluation/evaluator.py` | Metrics, ROC, confusion matrix, error analysis, `summary.csv` |
-| `src/pipeline/run_pipeline.py` | Orchestrates training + evaluation |
-| `src/service/model_service.py` | Loads joblib or Hugging Face models; `predict(text)` |
-| `src/api/main.py` | REST endpoints, lifespan model load |
-| `src/app/app.py` | Streamlit UI; calls `ModelService` directly |
+## Local development
 
-## Label strategy
-
-- **Binary default:** column `IsToxic` → Safe `0`, Toxic `1`
-- User-facing strings: **Safe** / **Toxic** (not “hate” or “harmful” in the UI copy)
-- API returns `is_toxic` and `probability` (P(toxic))
+| Process | Command | Port |
+|---------|---------|------|
+| API | `uv run uvicorn src.api.main:app --reload` | 8000 |
+| UI | `cd frontend && npm run dev` | 5173 (proxies API) |
 
 ## Docker
 
-[`docker-compose.yml`](../docker-compose.yml) runs two containers from one image:
+Single service `youtube_hate_detector-app` on port **8000** (API + static UI).
 
-- `youtube_hate_detector-api` — uvicorn port 8000
-- `youtube_hate_detector-streamlit` — port 8501
+## API layout
 
-Both include `final_model.joblib`, configs, spaCy, and NLTK data baked into the image.
-
-## Tests
-
-[`tests/`](../tests/) — preprocessor, vectorizer, model binary outputs, `/predict` schema (mocked service).
+```
+src/api/
+  main.py           # app factory, CORS, static mount
+  schemas.py        # Pydantic models
+  services.py       # predict helpers
+  youtube.py        # comment fetch + metadata
+  state.py          # shared app state
+  routes/
+    health.py
+    models.py
+    predict.py
+    videos.py
+```
