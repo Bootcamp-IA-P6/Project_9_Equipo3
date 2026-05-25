@@ -21,16 +21,15 @@ dependencies = [
     "seaborn>=0.13.2",
     "mlflow>=2.11.0",
     "protobuf>=3.20,<5.0",
-]
-
-[project.optional-dependencies]
-hf = [
     "transformers>=5.9.0",
     "torch>=2.0.0",
     "sentencepiece>=0.2.0",
     "accelerate>=0.30.0",
     "datasets>=3.0.0",
+    "supabase>=2.0.0",
 ]
+
+[project.optional-dependencies]
 train = [
     "deep-translator>=1.11.4",
     "sentence-transformers>=3.0.0",
