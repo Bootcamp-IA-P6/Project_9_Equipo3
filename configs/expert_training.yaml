@@ -1,0 +1,88 @@
+# Phase 5: Expert Aggressive — Toxic-BERT (head-only) + bottleneck LR + tuned threshold
+# Goals: F1-toxic > 0.75, |Train F1 - Test F1| < 0.05
+
+pipeline:
+  random_state: 42
+  test_size: 0.2
+  val_size: 0.15
+  cv_folds: 5
+  max_train_test_gap: 0.05
+
+data:
+  raw_path: data/raw/youtoxic_english_1000.csv
+  target_binary: IsToxic
+  text_column: Text
+
+augmentation:
+  enabled: true
+  strategy: back_translation
+  source_lang: en
+  pivot_lang: de  # higher diversity vs Spanish pivot
+  min_words: 3
+  max_words: 60
+  rate_limit_every: 50
+  rate_limit_sleep_sec: 1.0
+  dedup:
+    enabled: true
+    cosine_threshold: 0.95
+    embedding_model: sentence-transformers/all-MiniLM-L6-v2
+
+transformer:
+  model_id: unitary/toxic-bert
+  max_length: 128
+  freeze_mode: head_only  # entire backbone frozen; classifier only
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_epochs: 10
+  batch_size: 8
+  warmup_ratio: 0.1
+  head_dropout: 0.3
+  label_smoothing: 0.05
+  early_stopping:
+    patience: 3
+    metric: f1_toxic
+    gap_stop_enabled: false
+    max_train_val_gap: 0.05
+    gap_check_min_epoch: 2
+  metric_for_best: f1_toxic
+  threshold_tuning:
+    enabled: true
+    metric: f1_toxic
+    min_threshold: 0.05
+    max_threshold: 0.95
+    step: 0.01
+
+logistic_regression:
+  C: 0.05
+  max_iter: 2000
+  class_weight: balanced
+  solver: lbfgs
+  gap_search:
+    enabled: true
+    max_gap: 0.05
+    use_original_train_for_gap: true
+    param_grid:
+      - {C: 0.05, max_features: 250, min_df: 3}
+      - {C: 0.03, max_features: 250, min_df: 5}
+      - {C: 0.02, max_features: 250, min_df: 5}
+      - {C: 0.01, max_features: 250, min_df: 8}
+      - {C: 0.005, max_features: 250, min_df: 10}
+  tfidf:
+    max_features: 250
+    ngram_range: [1, 2]
+    sublinear_tf: true
+    min_df: 3
+
+ensemble:
+  method: soft_vote
+  bert_weight: 0.7
+  lr_weight: 0.3
+  threshold_tuning:
+    enabled: true
+    metric: f1_toxic
+
+output:
+  transformer_dir: models/expert_toxic_bert
+  lr_path: models/expert_lr_tfidf.joblib
+  ensemble_meta_path: models/expert_ensemble_meta.json
+  reports_dir: reports/expert

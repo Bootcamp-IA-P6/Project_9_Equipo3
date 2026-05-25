@@ -1,0 +1,22 @@
+{
+  "lr_tfidf": {
+    "model": "LR + TF-IDF (Baseline)",
+    "artifact": "models/baseline/lr_tfidf.joblib",
+    "source": "Optuna-tuned sklearn pipeline (Notebook 06 → final_model.joblib)",
+    "f1_weighted_test": 0.7579,
+    "train_test_gap_pp": 4.76,
+    "roc_auc_test": 0.81,
+    "role": "Esencial sklearn baseline — fast CPU inference"
+  },
+  "frozen_toxic_bert": {
+    "model": "Frozen Toxic-BERT (Baseline)",
+    "hub_model_id": "unitary/toxic-bert",
+    "freeze_mode": "inference_only",
+    "evaluation_source": "reports/golden_baseline/golden_baseline_run_20260524_213342.json",
+    "f1_weighted_test": 0.7903,
+    "train_test_gap_pp": 0.16,
+    "threshold": 0.12,
+    "roc_auc_test": 0.8759,
+    "role": "Transformer baseline — all layers frozen, no fine-tuning on 1k rows"
+  }
+}

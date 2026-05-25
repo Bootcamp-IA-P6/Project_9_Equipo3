@@ -1,0 +1,41 @@
+models:
+  logistic_regression:
+    C: 0.4
+    max_iter: 1000
+    class_weight: balanced
+    solver: lbfgs
+
+  # High regularization path for stable hybrid ensemble (see stable_training.yaml)
+  logistic_regression_stable:
+    C: 0.01
+    max_iter: 2000
+    class_weight: balanced
+    solver: lbfgs
+
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 10
+    min_samples_leaf: 5
+    max_features: sqrt
+    class_weight: balanced
+    n_jobs: -1
+
+  xgboost:
+    n_estimators: 100
+    max_depth: 3
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 5
+    reg_lambda: 1
+    scale_pos_weight: 1
+
+evaluation:
+  primary_metric: f1_weighted
+  metrics:
+    - accuracy
+    - f1_weighted
+    - precision_weighted
+    - recall_weighted
+    - roc_auc

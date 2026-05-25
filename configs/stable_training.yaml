@@ -1,0 +1,81 @@
+# Stable training — DistilBERT + TF-IDF LR + hybrid ensemble
+# Goals: Test F1 > 0.80, |Train F1 - Test/Val F1| < 0.05 (5 pp)
+
+pipeline:
+  random_state: 42
+  test_size: 0.2
+  val_size: 0.15  # fraction of remaining train after test split
+  cv_folds: 5
+  max_train_test_gap: 0.05  # |train F1 - test/val F1| rubric (5 pp)
+
+data:
+  raw_path: data/raw/youtoxic_english_1000.csv
+  target_binary: IsToxic
+  text_column: Text
+
+augmentation:
+  enabled: true
+  strategy: back_translation  # toxic class only
+  source_lang: en
+  pivot_lang: es
+  min_words: 3
+  max_words: 60
+  rate_limit_every: 50
+  rate_limit_sleep_sec: 1.0
+  dedup:
+    enabled: true
+    cosine_threshold: 0.95
+    embedding_model: sentence-transformers/all-MiniLM-L6-v2
+
+distilbert:
+  model_id: distilbert-base-uncased
+  max_length: 128
+  num_layers: 6
+  freeze_first_n_layers: 4  # layers 0-3 frozen; layers 4-5 + head trainable
+  learning_rate: 1.0e-5
+  weight_decay: 0.01
+  max_epochs: 15
+  batch_size: 8
+  warmup_ratio: 0.1
+  head_dropout: 0.5
+  label_smoothing: 0.1
+  early_stopping:
+    patience: 3
+    metric: f1_toxic  # val F1 for patience-based stop
+    gap_stop_enabled: false  # production: patience on val F1 only
+    max_train_val_gap: 0.045
+    gap_check_min_epoch: 2
+  metric_for_best: f1_toxic
+
+logistic_regression:
+  C: 0.05
+  max_iter: 2000
+  class_weight: balanced
+  solver: lbfgs
+  gap_search:
+    enabled: true
+    max_gap: 0.05
+    use_original_train_for_gap: true
+    param_grid:
+      - {C: 0.05, max_features: 800, min_df: 3}
+      - {C: 0.05, max_features: 500, min_df: 5}
+      - {C: 0.03, max_features: 800, min_df: 5}
+      - {C: 0.02, max_features: 400, min_df: 5}
+      - {C: 0.01, max_features: 400, min_df: 8}
+      - {C: 0.005, max_features: 300, min_df: 10}
+  tfidf:
+    max_features: 800
+    ngram_range: [1, 2]
+    sublinear_tf: true
+    min_df: 3
+
+ensemble:
+  method: soft_vote  # soft_vote | stacking
+  bert_weight: 0.5
+  lr_weight: 0.5
+
+output:
+  distilbert_dir: models/stable_distilbert
+  lr_path: models/stable_lr_tfidf.joblib
+  ensemble_meta_path: models/stable_ensemble_meta.json
+  reports_dir: reports/stable

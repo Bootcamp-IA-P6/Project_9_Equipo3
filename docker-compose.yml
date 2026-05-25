@@ -1,0 +1,29 @@
+# youtube_hate_detector — FastAPI + React (single service)
+# Start:  docker compose up --build
+# Stop:   docker compose down
+
+name: youtube_hate_detector
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Production meta-stacking requires transformers + torch (INSTALL_HF=1)
+        INSTALL_HF: ${INSTALL_HF:-1}
+    image: youtube_hate_detector:latest
+    container_name: youtube_hate_detector-app
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_NAME: "Meta-Feature Stacking (Production)"
+      ENV: production
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      NLTK_DATA: /app/nltk_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped

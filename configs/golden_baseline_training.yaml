@@ -1,0 +1,100 @@
+# Golden Baseline + Performance Squeeze + Hybrid Safety Net (briefing <5% gap, F1≥0.80)
+
+pipeline:
+  name: golden_baseline
+  random_state: 42
+  test_size: 0.2
+  val_size: 0.15
+  max_train_test_gap: 0.05
+  baseline_gap_target: 0.01
+  squeeze_gap_target: 0.049
+  target_f1_weighted: 0.80
+
+data:
+  raw_path: data/raw/youtoxic_english_1000.csv
+  processed_preprocessed: data/processed/v2/comments_preprocessed.csv
+  processed_stats: data/processed/v2/comments_with_stats.csv
+  target_binary: IsToxic
+  text_column: Text
+  id_column: CommentId
+  features_config: configs/features.yaml
+
+augmentation:
+  enabled: false
+
+# Step 1 — pretrained Toxic-BERT, zero fine-tuning
+baseline:
+  model_id: unitary/toxic-bert
+  max_length: 128
+  batch_size: 8
+  model_label: Golden-Baseline-Toxic-BERT
+  threshold_tuning:
+    enabled: true
+    metric: f1_weighted
+    min_threshold: 0.05
+    max_threshold: 0.95
+    step: 0.01
+
+# Step 2 — last 2 layers + R-Drop, lr 5e-6, 15 epochs
+transformer:
+  model_id: unitary/toxic-bert
+  model_label: Performance-Squeeze-Toxic-BERT
+  max_length: 128
+  freeze_mode: last_n_layers
+  train_last_n_layers: 2
+  learning_rate: 5.0e-6
+  weight_decay: 0.01
+  max_epochs: 15
+  batch_size: 8
+  warmup_ratio: 0.1
+  head_dropout: 0.3
+  label_smoothing: 0.05
+  rdrop:
+    enabled: true
+    alpha: 0.5
+  early_stopping:
+    patience: 4
+    metric: f1_weighted
+    gap_stop_enabled: true
+    max_train_val_gap: 0.049
+    gap_check_min_epoch: 2
+  metric_for_best: f1_weighted
+  threshold_tuning:
+    enabled: true
+    metric: f1_weighted
+    min_threshold: 0.30
+    max_threshold: 0.70
+    step: 0.01
+  test_time_augmentation:
+    enabled: false
+
+# Step 3 — highly regularized LR anchor
+logistic_regression:
+  C: 0.001
+  max_iter: 2000
+  class_weight: balanced
+  solver: lbfgs
+  gap_search:
+    enabled: false
+  tfidf:
+    max_features: 200
+    ngram_range: [1, 2]
+    sublinear_tf: true
+    min_df: 3
+
+ensemble:
+  bert_weight: 0.90
+  lr_weight: 0.10
+  fixed_weights: true
+  threshold_tuning:
+    enabled: true
+    metric: f1_weighted
+    min_threshold: 0.30
+    max_threshold: 0.70
+    step: 0.01
+
+output:
+  transformer_dir: models/golden_squeeze_toxic_bert
+  lr_path: models/golden_squeeze_lr.joblib
+  ensemble_meta_path: models/golden_squeeze_ensemble_meta.json
+  reports_dir: reports/golden_baseline

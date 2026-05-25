@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Entornos virtuales
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Datos (no subir datos al repo)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Modelos entrenados
+#models/*
+!models/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# Variables de entorno
+.env
+*.env
+secrets.yaml
+
+# IDEs
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlruns/
+mlartifacts/
+
+#jony
+#modelos no subidos
+models/roberta_hate_results/
+models/distilbert_results/
+models/best_distilbert/
+models/nb08_distilbert/
+models/nb08_roberta_hate/
+models/nb08_toxic_distilbert/
+
+models/lr_baseline.joblib
+models/best_ensemble.joblib
+
+
+# Experiments
+models/experiments/
+
+# Reports — optional experiment outputs (teammate pipelines; keep v2/ and pipeline/ tracked)
+reports/v2/pipeline/
+reports/expert/
+reports/expert/**
+reports/stable/
+reports/stable/**
+reports/performance_push/
+reports/performance_push/**
+reports/stealth_learning/
+reports/stealth_learning/**
+reports/hybrid_clean/
+reports/hybrid_clean/**
+reports/notebook_13/
+reports/notebook_13/**
+
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Custom files
+AGENTS.md
+.matplotlib_cache/
+docs/project-ai-nlp.pdf

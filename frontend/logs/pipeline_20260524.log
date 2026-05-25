@@ -1,0 +1,3 @@
+2026-05-24 15:06:47 | INFO     | src.api.main | Starting youtube_hate_detector API — model: LR + TF-IDF (local)
+2026-05-24 15:06:54 | INFO     | src.api.main | Model warm-up complete
+2026-05-24 15:07:02 | INFO     | src.api.main | API shutdown

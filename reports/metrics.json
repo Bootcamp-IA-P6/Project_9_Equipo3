@@ -1,0 +1,50 @@
+{
+  "n_samples": 997,
+  "n_train_original": 797,
+  "n_external": 38000,
+  "n_train_fit": 38797,
+  "n_test": 200,
+  "positive_rate": 0.46038114343029085,
+  "train_metrics": {
+    "accuracy": 0.7314930991217063,
+    "precision": 0.6917293233082706,
+    "recall": 0.7520435967302452,
+    "f1": 0.720626631853786
+  },
+  "test_metrics": {
+    "accuracy": 0.71,
+    "precision": 0.660377358490566,
+    "recall": 0.7608695652173914,
+    "f1": 0.7070707070707071
+  },
+  "gaps": {
+    "precision": 0.031351964817704636,
+    "f1": 0.013555924783078876,
+    "accuracy": 0.021493099121706383,
+    "recall": 0.008825968487146119
+  },
+  "gap_constraint": 0.05,
+  "gap_ok": true,
+  "confusion_matrix_test": [
+    [
+      72,
+      36
+    ],
+    [
+      22,
+      70
+    ]
+  ],
+  "is_ensemble": true,
+  "config": {
+    "augment_multiplier": 0.0,
+    "lr_C": 0.3057497042744256,
+    "max_df": 0.8538283755028163,
+    "max_features": 2500,
+    "min_df": 4,
+    "nb_alpha": 1.006373215225186,
+    "ngram_range": "bigram",
+    "rf_max_depth": 28,
+    "rf_n_estimators": 250
+  }
+}
