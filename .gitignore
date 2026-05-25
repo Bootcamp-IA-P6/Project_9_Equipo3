@@ -69,8 +69,20 @@ models/best_ensemble.joblib
 # Experiments
 models/experiments/
 
-# Reports experiments
+# Reports — optional experiment outputs (teammate pipelines; keep v2/ and pipeline/ tracked)
 reports/v2/pipeline/
+reports/expert/
+reports/expert/**
+reports/stable/
+reports/stable/**
+reports/performance_push/
+reports/performance_push/**
+reports/stealth_learning/
+reports/stealth_learning/**
+reports/hybrid_clean/
+reports/hybrid_clean/**
+reports/notebook_13/
+reports/notebook_13/**
 
 
 # Python cache

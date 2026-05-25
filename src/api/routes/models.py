@@ -44,6 +44,7 @@ async def get_model_info():
     info = service.get_model_info()
     state = get_state()
     uptime = round(time.time() - state["startup_time"], 1) if state["startup_time"] else 0.0
+    gap = info.get("train_test_gap_pp")
     return ModelInfo(
         name=state["model_name"],
         type=info.get("type", "unknown"),
@@ -52,6 +53,9 @@ async def get_model_info():
         accuracy=info.get("accuracy", ""),
         uptime_s=uptime,
         predictions_served=state.get("predictions_served", 0),
+        display_banner=info.get("display_banner"),
+        train_test_gap_pp=float(gap) if gap is not None else None,
+        recommended_threshold=info.get("recommended_threshold"),
     )
 
 

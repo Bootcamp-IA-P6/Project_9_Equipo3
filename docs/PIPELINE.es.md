@@ -44,6 +44,6 @@ Ejecutar desde la raíz del repositorio.
 | `reports/pipeline/lr/roc_lr.png` | Curva ROC |
 | `reports/pipeline/lr/errors_lr.csv` | FP / FN |
 
-## Modelo en producción
+## Inferencia del demo
 
-La API y Streamlit cargan `models/final_model.joblib` vía `ModelService`.
+Catálogo en [`configs/model_catalog.yaml`](../configs/model_catalog.yaml): **Meta-Feature Stacking** (producción), **LR + TF-IDF** y **Frozen Toxic-BERT** (baselines en `models/baseline/manifest.json`).

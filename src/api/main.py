@@ -22,7 +22,12 @@ load_dotenv()
 
 from src.api.routes import health, models, predict, videos
 from src.api.state import PROJECT_ROOT, get_state
-from src.service.model_service import AVAILABLE_MODELS, ModelService, check_model_availability
+from src.service.model_service import (
+    AVAILABLE_MODELS,
+    ModelService,
+    _DEFAULT_MODEL_NAME,
+    check_model_availability,
+)
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,10 +38,12 @@ FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state = get_state()
-    model_name = os.getenv("MODEL_NAME", next(iter(AVAILABLE_MODELS.keys())))
+    model_name = os.getenv("MODEL_NAME", _DEFAULT_MODEL_NAME)
     available, reason = check_model_availability(model_name, PROJECT_ROOT)
     if not available:
-        fallback = next(iter(AVAILABLE_MODELS.keys()))
+        fallback = _DEFAULT_MODEL_NAME
+        if not check_model_availability(fallback, PROJECT_ROOT)[0]:
+            fallback = next(iter(AVAILABLE_MODELS.keys()))
         logger.warning(
             "MODEL_NAME '%s' unavailable (%s) — using '%s'",
             model_name,

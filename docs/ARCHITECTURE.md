@@ -15,7 +15,7 @@ flowchart LR
 
 - **UI:** `frontend/` built to `frontend/dist`, served by FastAPI `StaticFiles` in production.
 - **Inference:** Only `ModelService` in `src/service/` loads models.
-- **Catalog:** `configs/model_catalog.yaml` — add models without React changes.
+- **Catalog:** `configs/model_catalog.yaml` — baselines (LR, frozen BERT) + production meta-stack.
 - **Suggested videos:** `configs/suggested_videos.yaml` — YouTube video IDs for the right rail.
 
 ## Local development

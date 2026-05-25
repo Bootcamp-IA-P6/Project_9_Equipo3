@@ -7,6 +7,8 @@ import { useDebouncedPredict } from "../hooks/useDebouncedPredict";
 import type { CommentItem, SuggestedVideo } from "../types/api";
 import { formatPct, newId, toxicityColor } from "../utils/toxicity";
 
+const DEFAULT_EMBED_VIDEO_ID = "A1uxPRUgimk";
+
 function isPlaceholderTitle(title: string, id: string): boolean {
   return title === `Video ${id}`;
 }
@@ -16,7 +18,7 @@ export function WatchPage() {
   const [draft, setDraft] = useState("");
   const [sessionComments, setSessionComments] = useState<CommentItem[]>([]);
   const [suggested, setSuggested] = useState<SuggestedVideo[]>([]);
-  const [maxComments, setMaxComments] = useState(50);
+  const [maxComments, setMaxComments] = useState(15);
   const [activeVideo, setActiveVideo] = useState<SuggestedVideo | null>(null);
   const [youtubeComments, setYoutubeComments] = useState<CommentItem[]>([]);
   const [loadingVideoId, setLoadingVideoId] = useState<string | null>(null);
@@ -115,30 +117,28 @@ export function WatchPage() {
                 />
                 <span className="player-fallback-cta">Watch on YouTube (embedding blocked)</span>
               </a>
-            ) : activeVideo ? (
+            ) : (
               <iframe
                 className="player-iframe"
-                src={`https://www.youtube.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
-                title={activeVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                src={`https://www.youtube.com/embed/${
+                  activeVideo?.id ?? DEFAULT_EMBED_VIDEO_ID
+                }?rel=0${activeVideo ? "&autoplay=1" : ""}`}
+                title={activeVideo?.title ?? "YouTube video player"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
                 loading="lazy"
               />
-            ) : (
-              <div className="player-poster">
-                <span className="play-icon" aria-hidden>
-                  ▶
-                </span>
-                <p className="player-hint">Select a video from Up next</p>
-              </div>
             )}
           </div>
 
           <h1 className="video-title">
-            {activeVideo?.title ?? "Select a video from Up next"}
+            {activeVideo?.title ?? "Watch and moderate comments"}
           </h1>
           <p className="video-meta">
-            {activeVideo ? activeVideo.channel_title : "Pick a suggested video to start"}
+            {activeVideo
+              ? activeVideo.channel_title
+              : "Choose a video from Up next to load and score its comments"}
           </p>
 
           {activeVideo && isPlaceholderTitle(activeVideo.title, activeVideo.id) && (

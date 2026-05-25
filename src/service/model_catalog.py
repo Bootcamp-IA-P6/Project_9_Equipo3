@@ -11,13 +11,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_PATH = PROJECT_ROOT / "configs" / "model_catalog.yaml"
 
 _DEFAULT_CATALOG: dict[str, dict[str, Any]] = {
-    "LR + TF-IDF (local)": {
-        "type": "local",
-        "icon": "⚡",
-        "description": "Project baseline.",
-        "speed": "< 50ms",
-        "accuracy": "F1 0.76",
-        "requires": "joblib only",
+    "Meta-Feature Stacking (Production)": {
+        "type": "meta_stack",
+        "description": "Hybrid meta-feature stacking (Notebook 14).",
+        "accuracy": "F1 0.805",
+        "production_default": True,
+        "model_path": "models/production_final/meta_stack_final.joblib",
+        "requires": "uv sync --extra hf",
     },
 }
 

@@ -1,15 +1,35 @@
-# Suggested videos for the watch-page right rail (edit ids only).
+# Suggested videos for the Watch page "Up next" rail (edit ids only).
+# max_comments: cap for /predict-video when a rail video is selected.
+# Default player embed (no comments until you pick a rail video): frontend/src/pages/WatchPage.tsx → DEFAULT_EMBED_VIDEO_ID
 # Prefer embed-friendly videos with comments enabled (avoid Vevo music IDs).
-max_comments: 50
+max_comments: 15
 
 videos:
   - id: jNQXAC9IVRw
     note: Me at the zoo — first YouTube upload; comments enabled
-  - id: IEEhzQoKtQU
-    note: 3Blue1Brown — embed-friendly educational
-  - id: dQw4w9WgXcQ
-    note: Rick Astley — usually embeddable
-  - id: M7lc1UVf-VE
-    note: YouTube Developers — designed for embedding
-  - id: 8aGhZQkoFbQ
-    note: What is an API — tech talk, comments on
+  - id: W_L0sOE2UGo
+    note: Jubilee — 1 Journalist vs 20 Trump Supporters - Surrounded
+  - id: sAQvUEK2OCw
+    note: Open to Debate — China Does Capitalism Better Than America
+  - id: xk48z8N-sl0
+    note: World Science Festival — Brian Greene and Leonard Susskind - Quantum Mechanics, Black Holes and String Theory
+  - id: hY7m5jjJ9mM
+    note:
+  - id: i9lFtio7Bjc
+    note: Luke Martin - 24 Hours of Spanish Food in Madrid - STREET FOOD to SEAFOOD in Spains Foodie Capital
+  - id: mKSYCG8P-m4
+    note:
+  - id: OkYQMMykgMA
+    note:
+  - id: A1uxPRUgimk
+    note:
+  - id: d1sWWXrWdxs
+    note:
+  - id: tsNBKKRXqI4
+    note:
+  - id: 2S-WJN3L5eo
+    note:
+  - id: H9LVXkvM4Dk
+    note:
+  - id: PWLMpx7lXC4
+    note:

@@ -42,7 +42,7 @@ class BatchPredictResponse(BaseModel):
 
 class VideoRequest(BaseModel):
     url: str
-    max_comments: int = Field(50, ge=1, le=200)
+    max_comments: int = Field(15, ge=1, le=200)
     threshold: float = Field(0.5, ge=0.0, le=1.0)
 
 
@@ -81,6 +81,9 @@ class ModelInfo(BaseModel):
     accuracy: str
     uptime_s: float
     predictions_served: int
+    display_banner: Optional[str] = None
+    train_test_gap_pp: Optional[float] = None
+    recommended_threshold: Optional[float] = None
 
 
 class SuggestedVideo(BaseModel):

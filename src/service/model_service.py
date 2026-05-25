@@ -9,9 +9,19 @@ from typing import Any, Optional
 
 import joblib
 
+from src.service.meta_stack_predictor import MetaStackPredictor
 from src.service.model_catalog import load_model_catalog
 
 AVAILABLE_MODELS: dict[str, dict[str, Any]] = load_model_catalog()
+
+_DEFAULT_MODEL_NAME = next(
+    (
+        name
+        for name, cfg in AVAILABLE_MODELS.items()
+        if cfg.get("production_default")
+    ),
+    next(iter(AVAILABLE_MODELS.keys())),
+)
 
 _HF_DEPS_MSG = "Install HF deps: uv sync --extra hf"
 _LFS_POINTER_PREFIX = "version https://git-lfs"
@@ -73,6 +83,9 @@ def check_model_availability(name: str, project_root: Path | None = None) -> tup
     model_type = cfg.get("type", "local")
 
     if model_type == "local":
+        rel = cfg.get("model_path")
+        if rel and (root / rel).is_file():
+            return True, None
         models_dir = root / "models"
         if any((models_dir / n).exists() for n in (
             "final_model.joblib",
@@ -81,7 +94,17 @@ def check_model_availability(name: str, project_root: Path | None = None) -> tup
             "best_ensemble.joblib",
         )):
             return True, None
+        if (models_dir / "baseline" / "lr_tfidf.joblib").is_file():
+            return True, None
         return False, f"No model in {models_dir}"
+
+    if model_type == "meta_stack":
+        bundle = cfg.get("model_path", "models/production_final/meta_stack_final.joblib")
+        if not (root / bundle).is_file():
+            return False, f"Meta-stack bundle not found at {bundle}"
+        if not hf_deps_available():
+            return False, _HF_DEPS_MSG
+        return True, None
 
     if model_type == "hf_local":
         if not hf_deps_available():
@@ -145,13 +168,19 @@ class _FallbackPreprocessor:
 class ModelService:
     def __init__(self, model_name: str, project_root: Optional[Path] = None):
         self.model_name = model_name
-        self.cfg = AVAILABLE_MODELS.get(model_name) or next(iter(AVAILABLE_MODELS.values()))
+        resolved = AVAILABLE_MODELS.get(model_name)
+        if resolved is None:
+            resolved = AVAILABLE_MODELS.get(_DEFAULT_MODEL_NAME) or next(
+                iter(AVAILABLE_MODELS.values())
+            )
+        self.cfg = resolved
         self.project_root = project_root or Path.cwd()
         self._model = None
         self._preprocessor = None
+        self._meta_stack: MetaStackPredictor | None = None
 
     def _get_model(self):
-        if self._model is None:
+        if self._model is None and self.cfg["type"] != "meta_stack":
             t = self.cfg["type"]
             if t == "local":
                 self._load_local()
@@ -166,25 +195,63 @@ class ModelService:
                     self._load_hf(self.cfg["hub_fallback"])
                 else:
                     raise FileNotFoundError(_reason or f"Model not found at {path}.")
+            else:
+                raise ValueError(f"Unsupported model type: {t}")
+        if self.cfg["type"] == "meta_stack" and self._meta_stack is None:
+            self._load_meta_stack()
         return self._model
 
     def _load_local(self) -> None:
-        for name in ("final_model.joblib", "lr_tuned.joblib", "lr_baseline.joblib", "best_ensemble.joblib"):
-            p = self.project_root / "models" / name
-            if p.exists():
+        rel = self.cfg.get("model_path")
+        if rel:
+            p = self.project_root / rel
+            if p.is_file():
                 self._model = joblib.load(p)
-                break
+        if self._model is None:
+            for name in (
+                "final_model.joblib",
+                "lr_tuned.joblib",
+                "lr_baseline.joblib",
+                "best_ensemble.joblib",
+            ):
+                p = self.project_root / "models" / name
+                if p.exists():
+                    self._model = joblib.load(p)
+                    break
+        if self._model is None:
+            baseline = self.project_root / "models" / "baseline" / "lr_tfidf.joblib"
+            if baseline.is_file():
+                self._model = joblib.load(baseline)
         if self._model is None:
             raise FileNotFoundError(f"No model in {self.project_root / 'models'}")
-        try:
-            sys.path.insert(0, str(self.project_root))
-            from src.features.text_preprocessor import TextPreprocessor
 
-            self._preprocessor = TextPreprocessor(
-                config_path=str(self.project_root / "configs" / "features.yaml")
-            )
-        except Exception:
-            self._preprocessor = _FallbackPreprocessor()
+    def _load_meta_stack(self) -> None:
+        bundle_rel = self.cfg.get("model_path", "models/production_final/meta_stack_final.joblib")
+        manifest_rel = self.cfg.get("manifest_path", "models/production_final/manifest.json")
+        bundle_path = self.project_root / bundle_rel
+        manifest_path = self.project_root / manifest_rel
+        if not bundle_path.is_file():
+            raise FileNotFoundError(f"Meta-stack bundle not found: {bundle_path}")
+        self._meta_stack = MetaStackPredictor(
+            bundle_path,
+            manifest_path=manifest_path if manifest_path.is_file() else None,
+            frozen_model_id=self.cfg.get("frozen_bert_id", "unitary/toxic-bert"),
+        )
+        self._model = self._meta_stack
+        from sklearn.pipeline import Pipeline
+
+        if isinstance(self._model, Pipeline):
+            self._preprocessor = None
+        else:
+            try:
+                sys.path.insert(0, str(self.project_root))
+                from src.features.text_preprocessor import TextPreprocessor
+
+                self._preprocessor = TextPreprocessor(
+                    config_path=str(self.project_root / "configs" / "features.yaml")
+                )
+            except Exception:
+                self._preprocessor = _FallbackPreprocessor()
 
     def _load_hf(self, model_id_or_path: str) -> None:
         try:
@@ -203,6 +270,16 @@ class ModelService:
         if not text or not text.strip():
             return {"is_toxic": False, "probability": 0.0, "labels": [], "model_used": self.model_name}
         try:
+            if self.cfg["type"] == "meta_stack":
+                self._load_meta_stack()
+                raw = self._meta_stack.predict(text)  # type: ignore[union-attr]
+                return {
+                    "is_toxic": raw["is_toxic"],
+                    "probability": raw["probability"],
+                    "labels": raw.get("labels", []),
+                    "model_used": self.model_name,
+                    "recommended_threshold": raw.get("recommended_threshold"),
+                }
             model = self._get_model()
             if self.cfg["type"] == "local":
                 return self._pred_local(text, model)
@@ -217,8 +294,13 @@ class ModelService:
             }
 
     def _pred_local(self, text: str, model) -> dict:
-        clean = self._preprocessor.transform(text) or text
-        proba = float(model.predict_proba([clean])[0][1])
+        from sklearn.pipeline import Pipeline
+
+        if isinstance(model, Pipeline):
+            proba = float(model.predict_proba([text])[0][1])
+        else:
+            clean = self._preprocessor.transform(text) or text
+            proba = float(model.predict_proba([clean])[0][1])
         tox = proba >= 0.5
         return {
             "is_toxic": tox,
@@ -255,4 +337,7 @@ class ModelService:
         return AVAILABLE_MODELS
 
     def get_model_info(self) -> dict:
-        return self.cfg
+        info = dict(self.cfg)
+        if self.cfg["type"] == "meta_stack" and self._meta_stack is not None:
+            info["recommended_threshold"] = self._meta_stack.default_threshold
+        return info

@@ -27,13 +27,13 @@ def client():
         "is_toxic": False,
         "probability": 0.12,
         "labels": [],
-        "model_used": "LR + TF-IDF (local)",
+        "model_used": "Meta-Feature Stacking (Production)",
     }
 
     with TestClient(api_main.app) as test_client:
         state = get_state()
         state["service"] = mock_service
-        state["model_name"] = "LR + TF-IDF (local)"
+        state["model_name"] = "Meta-Feature Stacking (Production)"
         state["predictions_served"] = 0
         state["startup_time"] = 0.0
         yield test_client
@@ -99,27 +99,23 @@ def test_predict_video_demo_comments_differ_by_url(client: TestClient, monkeypat
     assert data1["results"][0]["text"] != data2["results"][0]["text"]
 
 
-def test_finetuned_local_reports_lfs_when_pointer_only():
-    from src.api.state import PROJECT_ROOT
-    from src.service.model_service import check_model_availability
+def test_catalog_has_demo_models():
+    from src.service.model_service import AVAILABLE_MODELS
 
-    weights = PROJECT_ROOT / "models" / "finetuned_hf" / "model.safetensors"
-    if not weights.is_file() or weights.stat().st_size >= 4096:
-        pytest.skip("finetuned_hf weights present or missing — LFS pointer test N/A")
-
-    ok, reason = check_model_availability("Fine-tuned (local HF)", PROJECT_ROOT)
-    assert ok is False
-    assert reason is not None
-    assert "materialize" in reason.lower() or "lfs" in reason.lower()
+    assert set(AVAILABLE_MODELS.keys()) == {
+        "Meta-Feature Stacking (Production)",
+        "LR + TF-IDF (Baseline)",
+        "Frozen Toxic-BERT (Baseline)",
+    }
 
 
 def test_select_model_via_post(client: TestClient):
     response = client.post(
         "/models/select",
-        json={"model_name": "LR + TF-IDF (local)"},
+        json={"model_name": "LR + TF-IDF (Baseline)"},
     )
     assert response.status_code == 200
-    assert response.json()["model"] == "LR + TF-IDF (local)"
+    assert response.json()["model"] == "LR + TF-IDF (Baseline)"
 
 
 def test_models_status_lists_catalog(client: TestClient):
@@ -129,7 +125,11 @@ def test_models_status_lists_catalog(client: TestClient):
     assert "models" in data
     assert len(data["models"]) >= 1
     names = {m["name"] for m in data["models"]}
-    assert "LR + TF-IDF (local)" in names
+    assert names == {
+        "Meta-Feature Stacking (Production)",
+        "LR + TF-IDF (Baseline)",
+        "Frozen Toxic-BERT (Baseline)",
+    }
 
 
 def test_predict_video_comments_disabled_raises_422(client: TestClient, monkeypatch):

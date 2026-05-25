@@ -37,7 +37,7 @@ def extract_video_id(url: str) -> str | None:
 
 def load_suggested_config() -> dict[str, Any]:
     if not SUGGESTED_CONFIG.exists():
-        return {"max_comments": 50, "videos": [{"id": "jNQXAC9IVRw"}]}
+        return {"max_comments": 15, "videos": [{"id": "jNQXAC9IVRw"}]}
     with SUGGESTED_CONFIG.open(encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 

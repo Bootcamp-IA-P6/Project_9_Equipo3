@@ -562,3 +562,27 @@ body {
   border-radius: 12px;
   padding: 1rem;
 }
+
+.model-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(90deg, #1a3a1a 0%, #212121 100%);
+  border: 1px solid #2ba640;
+  border-radius: 8px;
+  color: #e8f5e9;
+  font-size: 0.9rem;
+}
+
+.model-banner-icon {
+  font-size: 1.1rem;
+}
+
+.production-model-note {
+  color: var(--yt-text);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}

@@ -24,7 +24,7 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [threshold, setThreshold] = useState(0.5);
+  const [threshold, setThreshold] = useState(0.381);
   const [hubHistory, setHubHistory] = useState<HubEntry[]>([]);
 
   const addHubEntry = useCallback((entry: HubEntry) => {

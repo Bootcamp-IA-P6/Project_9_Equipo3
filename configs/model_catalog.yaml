@@ -1,44 +1,36 @@
-"LR + TF-IDF (local)":
+"Meta-Feature Stacking (Production)":
+  type: meta_stack
+  icon: "🏆"
+  description: "Production model — frozen Toxic-BERT CLS + metadata + regularized LR meta-learner (Notebook 14)."
+  speed: "~400ms CPU (first load downloads BERT)"
+  accuracy: "F1 0.805"
+  train_test_gap_pp: 2.54
+  recommended_threshold: 0.381
+  # display_banner: "Currently using: Meta-Feature Stacking (F1: 0.805, Gap: 2.54%)"
+  model_path: models/production_final/meta_stack_final.joblib
+  manifest_path: models/production_final/manifest.json
+  frozen_bert_id: unitary/toxic-bert
+  requires: "uv sync --extra hf; models/production_final/meta_stack_final.joblib"
+  production_default: true
+
+"LR + TF-IDF (Baseline)":
   type: local
   icon: "⚡"
-  description: "Project baseline. No GPU, instant inference."
+  description: "Esencial sklearn baseline — Optuna-tuned logistic regression on TF-IDF (Notebooks 01–03)."
   speed: "< 50ms"
-  accuracy: "F1 0.76"
+  accuracy: "F1 0.758"
+  train_test_gap_pp: 4.76
+  recommended_threshold: 0.5
+  model_path: models/baseline/lr_tfidf.joblib
   requires: "joblib only"
 
-"DistilBERT Toxicity":
+"Frozen Toxic-BERT (Baseline)":
   type: hf_remote
-  icon: "🤖"
-  model_id: martin-ha/toxic-comment-model
-  description: "DistilBERT fine-tuned on toxic comments (Hugging Face Hub)."
-  speed: "~200ms CPU"
-  accuracy: "F1 0.85"
-  requires: "uv sync --extra hf"
-
-"toxic-bert (multilabel)":
-  type: hf_remote
-  icon: "🧠"
+  icon: "🧊"
   model_id: unitary/toxic-bert
-  description: "BERT multi-label (Jigsaw). Six toxicity categories (Hugging Face Hub)."
+  description: "Frozen pretrained Toxic-BERT inference only (Notebook 12 golden baseline)."
   speed: "~400ms CPU"
-  accuracy: "F1 0.88"
+  accuracy: "F1 0.790"
+  train_test_gap_pp: 0.16
+  recommended_threshold: 0.12
   requires: "uv sync --extra hf"
-
-"RoBERTa Toxicity":
-  type: hf_remote
-  icon: "🔬"
-  model_id: s-nlp/roberta_toxicity_classifier
-  description: "RoBERTa fine-tuned for general toxicity (Hugging Face Hub)."
-  speed: "~350ms CPU"
-  accuracy: "F1 0.87"
-  requires: "uv sync --extra hf"
-
-"Fine-tuned (local HF)":
-  type: hf_local
-  icon: "✨"
-  model_path: models/finetuned_hf
-  hub_fallback: martin-ha/toxic-comment-model
-  description: "Local DistilBERT folder (models/finetuned_hf). Materialize weights if missing."
-  speed: "Hardware dependent"
-  accuracy: "TBD"
-  requires: "uv sync --extra hf; uv run python scripts/materialize_finetuned_weights.py"

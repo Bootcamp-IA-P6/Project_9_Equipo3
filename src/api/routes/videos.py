@@ -9,7 +9,7 @@ router = APIRouter(tags=["Videos"])
 @router.get("/videos/suggested", response_model=SuggestedVideosResponse)
 async def suggested_videos():
     cfg = load_suggested_config()
-    max_comments = int(cfg.get("max_comments", 50))
+    max_comments = int(cfg.get("max_comments", 15))
     entries = cfg.get("videos") or []
     ids = [e["id"] if isinstance(e, dict) else str(e) for e in entries]
     meta = fetch_video_metadata(ids)

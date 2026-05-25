@@ -10,13 +10,17 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "spacy>=3.8.14",
     "nltk>=3.9.4",
-    "pandas>=3.0.2",
+    "pandas<3.0.0",
     "PyYAML>=6.0.3",
     "python-dotenv>=1.2.2",
     "joblib>=1.5.3",
     "pydantic>=2.13.4",
     "httpx>=0.28.1",
     "google-api-python-client>=2.100.0",
+    "matplotlib>=3.10.9",
+    "seaborn>=0.13.2",
+    "mlflow>=2.11.0",
+    "protobuf>=3.20,<5.0",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +29,11 @@ hf = [
     "torch>=2.0.0",
     "sentencepiece>=0.2.0",
     "accelerate>=0.30.0",
+    "datasets>=3.0.0",
+]
+train = [
+    "deep-translator>=1.11.4",
+    "sentence-transformers>=3.0.0",
 ]
 dev = [
     "pytest>=8.0.0",

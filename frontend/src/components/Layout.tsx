@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { ModelBanner } from "./ModelBanner";
 
 export function Layout() {
   return (
@@ -16,6 +17,7 @@ export function Layout() {
         </NavLink>
       </nav>
       <main className="main-content">
+        {/* <ModelBanner /> */}
         <Outlet />
       </main>
     </div>

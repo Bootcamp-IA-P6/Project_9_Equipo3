@@ -90,5 +90,9 @@ export function getModelInfo() {
     name: string;
     description: string;
     predictions_served: number;
+    display_banner?: string | null;
+    train_test_gap_pp?: number | null;
+    recommended_threshold?: number | null;
+    accuracy?: string;
   }>("/model-info");
 }

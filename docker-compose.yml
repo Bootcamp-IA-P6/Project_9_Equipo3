@@ -9,14 +9,14 @@ services:
     build:
       context: .
       args:
-        # Set INSTALL_HF=1 for Hugging Face models (larger image, ~1–2 GB extra)
-        INSTALL_HF: ${INSTALL_HF:-0}
+        # Production meta-stacking requires transformers + torch (INSTALL_HF=1)
+        INSTALL_HF: ${INSTALL_HF:-1}
     image: youtube_hate_detector:latest
     container_name: youtube_hate_detector-app
     ports:
       - "8000:8000"
     environment:
-      MODEL_NAME: "LR + TF-IDF (local)"
+      MODEL_NAME: "Meta-Feature Stacking (Production)"
       ENV: production
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
       NLTK_DATA: /app/nltk_data

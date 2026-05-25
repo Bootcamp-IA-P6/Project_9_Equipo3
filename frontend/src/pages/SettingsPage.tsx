@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getModelsStatus, predict, setModel } from "../api/client";
+import { getModelInfo, getModelsStatus, predict, setModel } from "../api/client";
 import { useApp } from "../context/AppContext";
 import type { ModelStatusEntry } from "../types/api";
 
@@ -44,6 +44,10 @@ export function SettingsPage() {
       await setModel(name);
       setActive(name);
       setMessage(`Active model: ${name}`);
+      const info = await getModelInfo();
+      if (info.recommended_threshold != null) {
+        setThreshold(info.recommended_threshold);
+      }
       loadStatus();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to switch model");
@@ -72,12 +76,18 @@ export function SettingsPage() {
       <h1>Settings</h1>
       <section className="settings-card">
         <h2>Active model</h2>
+        <p className="production-model-note">
+          Default: <strong>Meta-Feature Stacking (Production)</strong> (F1 0.805, gap 2.54%).
+          Baselines: <strong>LR + TF-IDF</strong> (F1 0.758) and{" "}
+          <strong>Frozen Toxic-BERT</strong> (F1 0.790, gap 0.16%).
+        </p>
         <p className="hint">
-          HF models need <code>uv sync --extra hf</code> locally, or{" "}
-          <code>INSTALL_HF=1 docker compose build</code> in Docker.
+          Production and frozen BERT need <code>uv sync --extra hf</code> (or Docker{" "}
+          <code>INSTALL_HF=1</code>). LR baseline uses joblib only. First transformer load may
+          download weights (~1 min).
         </p>
         {switching && (
-          <p className="hint">Switching model… HF models may take up to a minute on first load.</p>
+          <p className="hint">Switching model… production may take up to a minute on first load.</p>
         )}
         <div className="model-list">
           {modelStatus.map((m) => (

@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     NLTK_DATA=/app/nltk_data \
-    MODEL_NAME="LR + TF-IDF (local)" \
+    MODEL_NAME="Meta-Feature Stacking (Production)" \
     ENV=production \
     INSTALL_HF=${INSTALL_HF}
 
@@ -42,12 +42,8 @@ PY
 
 COPY configs/ configs/
 COPY src/ src/
-COPY models/final_model.joblib models/final_model.joblib
-COPY models/finetuned_hf/ models/finetuned_hf/
-COPY scripts/materialize_finetuned_weights.py scripts/materialize_finetuned_weights.py
-RUN if [ "$INSTALL_HF" = "1" ]; then \
-      uv run python scripts/materialize_finetuned_weights.py || true; \
-    fi
+COPY models/baseline/ models/baseline/
+COPY models/production_final/ models/production_final/
 COPY --from=frontend-build /app/frontend/dist frontend/dist
 COPY .env.example .env.example
 
