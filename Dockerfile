@@ -16,6 +16,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     NLTK_DATA=/app/nltk_data \
     MODEL_NAME="Meta-Feature Stacking (Production)" \
     ENV=production \
+    PORT=8000 \
     INSTALL_HF=${INSTALL_HF}
 
 WORKDIR /app
@@ -50,6 +51,7 @@ COPY .env.example .env.example
 EXPOSE 8000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=60s \
-  CMD curl -f http://localhost:8000/health || exit 1
+  CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-CMD ["uv", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so ${PORT} is expanded at runtime (Render injects PORT; local defaults to 8000).
+CMD uv run uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
