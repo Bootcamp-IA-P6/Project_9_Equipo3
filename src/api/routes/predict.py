@@ -1,6 +1,6 @@
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from src.api.schemas import (
     BatchPredictRequest,
@@ -12,13 +12,23 @@ from src.api.schemas import (
 )
 from src.api.services import predict_single, to_predict_response
 from src.api.state import get_state
-from src.api.youtube import CommentsFetchError, fetch_comments
+from src.api.youtube import CommentsFetchError, extract_video_id, fetch_comments
+from src.db.supabase_client import list_predictions, save_prediction
+
 router = APIRouter(tags=["Prediction"])
 
 
 @router.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest):
-    return predict_single(request.text, request.threshold)
+    response = predict_single(request.text, request.threshold)
+    save_prediction(
+        text=request.text,
+        result=response,
+        source="api_direct",
+        threshold=request.threshold,
+        latency_ms=response.latency_ms,
+    )
+    return response
 
 
 @router.post("/predict-batch", response_model=BatchPredictResponse)
@@ -28,7 +38,15 @@ async def predict_batch(request: BatchPredictRequest):
     for text in request.texts:
         if not text.strip():
             continue
-        results.append(predict_single(text.strip(), request.threshold))
+        single = predict_single(text.strip(), request.threshold)
+        results.append(single)
+        save_prediction(
+            text=text.strip(),
+            result=single,
+            source="api_direct",
+            threshold=request.threshold,
+            latency_ms=single.latency_ms,
+        )
     total_ms = round((time.perf_counter() - t0) * 1000, 2)
     toxic_count = sum(1 for r in results if r.is_toxic)
     return BatchPredictResponse(
@@ -51,6 +69,8 @@ async def predict_video(request: VideoRequest):
     if not comments:
         raise HTTPException(status_code=404, detail="No comments found for this video")
 
+    video_id = extract_video_id(request.url)
+
     t0 = time.perf_counter()
     results: list[PredictResponse] = []
     service = get_state()["service"]
@@ -61,7 +81,17 @@ async def predict_video(request: VideoRequest):
         if not text.strip():
             continue
         raw = service.predict(text)
-        results.append(to_predict_response(text, raw, 0.0, request.threshold))
+        response = to_predict_response(text, raw, 0.0, request.threshold)
+        results.append(response)
+        save_prediction(
+            text=text,
+            result=response,
+            source="video_fetch",
+            video_id=video_id,
+            video_url=request.url,
+            threshold=request.threshold,
+            latency_ms=response.latency_ms,
+        )
 
     total_ms = round((time.perf_counter() - t0) * 1000, 2)
     toxic_count = sum(1 for r in results if r.is_toxic)
@@ -75,3 +105,12 @@ async def predict_video(request: VideoRequest):
         results=results,
         source=source,
     )
+
+
+@router.get("/predictions")
+async def get_predictions(
+    video_id: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+):
+    rows = list_predictions(video_id=video_id, limit=limit)
+    return rows
