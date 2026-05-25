@@ -71,6 +71,7 @@ models/experiments/
 
 # Reports experiments
 reports/v2/pipeline/
+reports/v2/audit/
 
 
 # Python cache
