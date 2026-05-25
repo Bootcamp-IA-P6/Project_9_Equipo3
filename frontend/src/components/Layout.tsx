@@ -5,7 +5,9 @@ export function Layout() {
   return (
     <div className="app-shell">
       <nav className="sidebar">
-        <div className="logo">youtube_hate_detector</div>
+        <div className="logo">
+          <img src="/signalmod_logo.png" alt="SignalMod" className="logo-img" />
+        </div>
         <NavLink to="/" end className={({ isActive }) => (isActive ? "nav active" : "nav")}>
           Watch
         </NavLink>
