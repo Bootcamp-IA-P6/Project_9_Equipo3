@@ -1,11 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
-import { getSuggestedVideos, predict, predictVideo } from "../api/client";
+import {
+  getSuggestedVideos,
+  listPredictions,
+  predict,
+  predictVideo,
+} from "../api/client";
 import { CommentRow } from "../components/CommentRow";
 import { SuggestedRail } from "../components/SuggestedRail";
 import { useApp } from "../context/AppContext";
 import { useDebouncedPredict } from "../hooks/useDebouncedPredict";
-import type { CommentItem, SuggestedVideo } from "../types/api";
-import { formatPct, newId, toxicityColor } from "../utils/toxicity";
+import type {
+  CommentItem,
+  PredictionRecord,
+  SuggestedVideo,
+} from "../types/api";
+import {
+  formatPct,
+  newId,
+  randomUsername,
+  relativeTime,
+  toxicityColor,
+  truncate,
+} from "../utils/toxicity";
 
 const DEFAULT_EMBED_VIDEO_ID = "A1uxPRUgimk";
 
@@ -25,41 +41,72 @@ export function WatchPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [demoBanner, setDemoBanner] = useState(false);
   const [dismissDemoBanner, setDismissDemoBanner] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [recentActivity, setRecentActivity] = useState<PredictionRecord[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
 
   const { result, loading, error } = useDebouncedPredict(draft, threshold);
+
+  const refreshRecent = useCallback(async (videoId?: string) => {
+    setRecentLoading(true);
+    try {
+      const res = await listPredictions(videoId, 20);
+      setRecentActivity(Array.isArray(res?.predictions) ? res.predictions : []);
+    } catch {
+      // Degrade gracefully if endpoint is missing or DB not configured
+      setRecentActivity([]);
+    } finally {
+      setRecentLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshRecent(activeVideo?.id);
+  }, [activeVideo?.id, refreshRecent]);
 
   useEffect(() => {
     getSuggestedVideos()
       .then((r) => {
         setSuggested(r.videos);
         setMaxComments(r.max_comments);
+        // Auto-load first video so the user sees comments on initial render.
+        if (r.videos.length > 0) {
+          void loadVideo(r.videos[0]);
+        }
       })
       .catch(() => setFetchError("Could not load suggested videos"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePost = useCallback(async () => {
     const text = draft.trim();
-    if (!text) return;
-    const analysis = result ?? (await predict(text, threshold));
-    const item: CommentItem = {
-      id: newId(),
-      user: "you",
-      text,
-      time: "just now",
-      is_toxic: analysis.is_toxic,
-      probability: analysis.probability,
-      labels: analysis.labels,
-      source: "manual",
-    };
-    setSessionComments((prev) => [...prev, item]);
-    addHubEntry({
-      user: "@you",
-      snippet: text.slice(0, 45),
-      score: analysis.probability,
-      action: analysis.is_toxic ? "Posted (toxic)" : "Approved",
-    });
-    setDraft("");
-  }, [draft, result, threshold, addHubEntry]);
+    if (!text || posting) return;
+    setPosting(true);
+    try {
+      const analysis = result ?? (await predict(text, threshold));
+      const item: CommentItem = {
+        id: newId(),
+        user: "you",
+        text,
+        time: "just now",
+        is_toxic: analysis.is_toxic,
+        probability: analysis.probability,
+        labels: analysis.labels,
+        source: "manual",
+      };
+      setSessionComments((prev) => [...prev, item]);
+      addHubEntry({
+        user: "@you",
+        snippet: text.slice(0, 45),
+        score: analysis.probability,
+        action: analysis.is_toxic ? "Posted (toxic)" : "Approved",
+      });
+      setDraft("");
+      void refreshRecent(activeVideo?.id);
+    } finally {
+      setPosting(false);
+    }
+  }, [draft, posting, result, threshold, addHubEntry, refreshRecent, activeVideo?.id]);
 
   const loadVideo = async (video: SuggestedVideo) => {
     setActiveVideo(video);
@@ -74,7 +121,7 @@ export function WatchPage() {
       setYoutubeComments(
         res.results.map((r, i) => ({
           id: `yt-${video.id}-${i}`,
-          user: `viewer_${i + 1}`,
+          user: randomUsername(`yt-${video.id}-${i}`),
           text: r.text,
           time: "from YouTube",
           is_toxic: r.is_toxic,
@@ -195,11 +242,21 @@ export function WatchPage() {
               </div>
             )}
             <div className="compose-actions">
-              <button type="button" className="btn-secondary" onClick={() => setDraft("")}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setDraft("")}
+                disabled={posting}
+              >
                 Cancel
               </button>
-              <button type="button" className="btn-primary" onClick={() => void handlePost()}>
-                Comment
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void handlePost()}
+                disabled={posting || !draft.trim()}
+              >
+                {posting ? "Analyzing…" : "Comment"}
               </button>
             </div>
           </div>
@@ -228,13 +285,35 @@ export function WatchPage() {
           )}
 
           <div className="comment-list">
-            {youtubeComments.map((c) => (
-              <CommentRow key={c.id} comment={c} />
+            {/* Local Supabase comments — always at the top (newest first) */}
+            {recentActivity.map((rec, idx) => (
+              <CommentRow
+                key={`recent-${rec.id ?? idx}`}
+                comment={{
+                  id: `recent-${rec.id ?? idx}`,
+                  user: randomUsername(`supa-${rec.id ?? idx}`),
+                  text: truncate(rec.text, 140),
+                  time: relativeTime(rec.created_at),
+                  is_toxic: rec.is_toxic,
+                  probability: rec.probability,
+                  labels: rec.labels ?? [],
+                  source: "recent",
+                }}
+              />
             ))}
+            {/* Current session (just posted) */}
             {[...sessionComments].reverse().map((c) => (
               <CommentRow key={c.id} comment={c} />
             ))}
+            {/* YouTube fetched comments — below */}
+            {youtubeComments.map((c) => (
+              <CommentRow key={c.id} comment={c} />
+            ))}
           </div>
+
+          {recentLoading && recentActivity.length === 0 && youtubeComments.length === 0 && (
+            <p className="loading-comments">Loading recent comments…</p>
+          )}
         </section>
 
         <SuggestedRail

@@ -43,5 +43,20 @@ export type CommentItem = {
   is_toxic: boolean;
   probability: number;
   labels: string[];
-  source: "manual" | "youtube";
+  source: "manual" | "youtube" | "recent";
+};
+
+export type PredictionRecord = {
+  id: string | number;
+  text: string;
+  is_toxic: boolean;
+  probability: number;
+  video_id?: string | null;
+  created_at: string;
+  labels?: string[];
+};
+
+export type PredictionsListResponse = {
+  predictions: PredictionRecord[];
+  total?: number;
 };

@@ -1,6 +1,7 @@
 import type {
   ModelStatusEntry,
   PredictResponse,
+  PredictionsListResponse,
   SuggestedVideo,
   VideoResponse,
 } from "../types/api";
@@ -83,6 +84,13 @@ export function setModel(name: string) {
 
 export function getSuggestedVideos() {
   return request<{ videos: SuggestedVideo[]; max_comments: number }>("/videos/suggested");
+}
+
+export function listPredictions(videoId?: string, limit = 20) {
+  const params = new URLSearchParams();
+  if (videoId) params.set("video_id", videoId);
+  params.set("limit", String(limit));
+  return request<PredictionsListResponse>(`/predictions?${params.toString()}`);
 }
 
 export function getModelInfo() {
