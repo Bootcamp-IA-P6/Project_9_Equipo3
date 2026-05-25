@@ -1,297 +1,312 @@
-# Detector de comentarios tóxicos en YouTube (youtube_hate_detector)
+<div align="center">
 
-[Python](https://www.python.org/downloads/)
-[FastAPI](https://fastapi.tiangolo.com/)
-[React](https://react.dev/)
-[Docker](https://docs.docker.com/compose/)
+<img src="docs/assets/signalmod_logo.png" alt="SignalMod" width="520" />
 
-**English:** [README.md](README.md)
+### Moderación inteligente para comentarios de YouTube
 
-Soporte de moderación **Seguro vs Tóxico** para comentarios estilo YouTube. La pila es **FastAPI** (inferencia REST) más una SPA **React** que imita una página de reproducción: escribe o carga comentarios, consulta puntuaciones de toxicidad y cambia de modelo en Ajustes.
+🌐 [English](README.md) · **Español**
 
-**Producción por defecto:** **Hybrid Meta-Feature Stacking** — `models/production_final/meta_stack_final.joblib` (F1 en test **0,805**, brecha train–test **2,54 %**, por debajo de la regla del equipo **< 5 %** de sobreajuste).
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.136-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)
+![Transformers](https://img.shields.io/badge/Transformers-5.9-FFD21E?logo=huggingface&logoColor=black)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8-F7931E?logo=scikitlearn&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?logo=supabase&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=white)
 
----
-
-## Qué hace este proyecto
-
-
-| Aspecto                    | Detalle                                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Tarea**                  | Clasificación binaria sobre `IsToxic` → **Seguro (0)** / **Tóxico (1)**                           |
-| **Datos**                  | `data/raw/youtoxic_english_1000.csv` (~1k comentarios en inglés; columnas multietiqueta para EDA) |
-| **Métrica principal**      | F1 ponderado (clase tóxica desbalanceada)                                                         |
-| **Control de sobreajuste** | |F1 train − F1 test| < 5 puntos porcentuales                                                      |
-| **Texto en la UI**         | **tóxico**                                                                                        |
-
-
-Los moderadores reciben una puntuación y etiqueta prácticas por comentario. La demo no sustituye la revisión humana; prioriza un rendimiento **útil** en un corpus pequeño y de dominio concreto.
+</div>
 
 ---
 
-## Modelos: baseline → producción
+## Descripción del proyecto
 
-Tres opciones de inferencia están en `[configs/model_catalog.yaml](configs/model_catalog.yaml)` y en la UI. Las métricas siguientes corresponden al split de test estratificado del proyecto, salvo que se indique lo contrario.
+**SignalMod** es un asistente de moderación inteligente para comentarios de YouTube. Clasifica automáticamente cada comentario como **Seguro** o **Tóxico**, devuelve una probabilidad entre 0 y 1 y etiqueta categorías de toxicidad (insulto, amenaza, odio identitario, contenido obsceno).
 
+Está construido alrededor del modelo **hybrid meta-feature stacking** del equipo — embeddings de Toxic-BERT congelado combinados con metadatos y una regresión logística regularizada — que alcanza **F1 = 0,805** con una brecha train–test de **2,54 pp** sobre el split de 200 muestras del proyecto.
 
-| Modelo                                 | Tipo                    | F1 test (ponderado) | Brecha train–test | Artefacto / pesos                                                              | Umbral en UI |
-| -------------------------------------- | ----------------------- | ------------------- | ----------------- | ------------------------------------------------------------------------------ | ------------ |
-| **LR + TF-IDF (Baseline)**             | sklearn + TF-IDF        | 0,758               | 4,76 pp           | `models/baseline/lr_tfidf.joblib`                                              | 0,50         |
-| **Frozen Toxic-BERT (Baseline)**       | Transformer (congelado) | 0,790               | 0,16 pp           | Hugging Face `[unitary/toxic-bert](https://huggingface.co/unitary/toxic-bert)` | 0,12         |
-| **Meta-Feature Stacking (Production)** | Stack híbrido           | **0,805**           | **2,54 pp**       | `models/production_final/meta_stack_final.joblib`                              | **0,381**    |
+El producto se entrega como una API REST con FastAPI y una SPA React que imita la experiencia de YouTube Watch: eliges un vídeo, la API descarga los 50 comentarios más recientes vía la YouTube Data API, los puntúa y persiste cada predicción en Supabase para que cualquier visitante pueda ver el histórico completo.
 
+---
 
-Números canónicos de baselines: `[models/baseline/manifest.json](models/baseline/manifest.json)`. Ejecución de producción: `[reports/notebook_14/final_result.json](reports/notebook_14/final_result.json)`. Guion de presentación: `[reports/HANDOVER_REPORT.md](reports/HANDOVER_REPORT.md)`.
+## Herramientas y lenguajes
 
-### Aportación del equipo — Hybrid Meta-Feature Stacking
+### Lenguajes
+- **Python 3.12** — backend, pipelines de ML, evaluación.
+- **TypeScript + React 18** — SPA del frontend.
+- **SQL (PostgreSQL vía Supabase)** — persistencia de predicciones.
 
-Producción combina señales que sklearn no captura solo, sin afinar un transformer grande sobre ~1k filas:
+### Backend
+- **FastAPI 0.136** — API REST, esquemas Pydantic, carga del modelo en lifespan.
+- **Uvicorn** — servidor ASGI con hot reload.
+- **scikit-learn 1.8** — baseline TF-IDF + meta-learner LogisticRegression.
+- **Optuna** — búsqueda de hiperparámetros del baseline TF-IDF.
+- **PyTorch 2.x + Transformers 5.9** — `unitary/toxic-bert` congelado para embeddings CLS.
+- **spaCy + NLTK** — lematización, stopwords, limpieza basada en regex.
+- **MLflow** — tracking de experimentos.
+- **Supabase Python SDK** — persistencia de predicciones con políticas RLS anónimas.
+- **google-api-python-client** — integración con YouTube Data API v3.
 
-```text
-Texto del comentario
-    ├─► Frozen Toxic-BERT → embedding [CLS] (768-d)
-    └─► Metadatos (longitud, ratio mayúsculas, densidad de emojis, …)
-              └─► concat → StandardScaler → LogisticRegression (C=0,001)
-                        └─► P(tóxico) → umbral 0,381
+### Frontend
+- **React 18 + Vite 5 + TypeScript** — SPA con hot module reload.
+- **CSS modules** — tema oscuro estilo YouTube.
+
+### Tooling y operaciones
+- **uv** — gestor de paquetes y entorno virtual de Python (`pyproject.toml` + `uv.lock`).
+- **pnpm** — gestor de paquetes del frontend.
+- **Docker + Docker Compose** — despliegue en un único contenedor sirviendo API + SPA construida.
+- **GNU Make** — `make dev`, `make install`, `make build`, `make docker`.
+- **Render** — despliegue gratuito vía blueprint `render.yaml`.
+- **Pytest** — tests unitarios de contratos de API y preprocesado.
+
+---
+
+## Arquitectura del proyecto
+
+```
+Project_9_Equipo3/
+├── configs/                       # Configs YAML para pipelines y catálogo de inferencia
+│   ├── pipeline.yaml              # Rutas de datos, target, folds de CV
+│   ├── features.yaml              # Preprocesado y ajustes de TF-IDF
+│   ├── model_catalog.yaml         # Catálogo de inferencia (3 modelos intercambiables)
+│   ├── best_params.yaml           # Ganador de Optuna para el baseline LR
+│   ├── suggested_videos.yaml      # IDs de YouTube del rail "Up next"
+│   └── *_training.yaml            # Perfiles de entrenamiento (golden, expert, hybrid, …)
+├── data/                          # Datasets crudos y procesados (git-ignored)
+├── docs/                          # API.md, PIPELINE.md, ARCHITECTURE.md, DEPLOY.md
+│   └── assets/signalmod_logo.png  # Activos de marca
+├── frontend/                      # SPA React + Vite
+│   ├── public/signalmod_logo.png  # Logo servido como activo estático
+│   └── src/
+│       ├── api/                   # Cliente HTTP tipado
+│       ├── components/            # Layout, CommentRow, SuggestedRail, ModelBanner
+│       ├── context/               # Estado global (modelo activo, umbral)
+│       ├── hooks/                 # useDebouncedPredict
+│       ├── pages/                 # WatchPage, HubPage, SettingsPage
+│       └── utils/                 # toxicityColor, randomUsername, relativeTime
+├── models/
+│   ├── baseline/lr_tfidf.joblib   # Baseline LR ajustado con Optuna
+│   └── production_final/          # meta_stack_final.joblib — artefacto de producción
+├── notebooks/
+│   ├── 01–04                      # EDA, preprocesado, TF-IDF, baseline LR
+│   ├── 12                         # Golden baseline (Toxic-BERT congelado)
+│   ├── 14                         # Meta-stacking final — artefacto de producción
+│   └── archive_attempts/          # Experimentos anteriores conservados para reproducibilidad
+├── reports/                       # Métricas, gráficos, figuras EDA, summary.csv
+├── src/
+│   ├── api/                       # App FastAPI
+│   │   ├── main.py                # Lifespan, CORS, montaje del SPA estático
+│   │   ├── routes/                # health, models, predict (+ /predictions), videos
+│   │   ├── schemas.py             # Modelos Pydantic request/response
+│   │   ├── services.py            # predict_single, to_predict_response
+│   │   ├── state.py               # Estado compartido de la app
+│   │   └── youtube.py             # Fetch a YouTube Data API + metadatos sugeridos
+│   ├── data/                      # Loader, dual loader para pipelines híbridos
+│   ├── db/                        # Cliente Supabase + helpers save_prediction
+│   ├── evaluation/                # Evaluator, threshold tuning, CV estable
+│   ├── experiments/               # Versiones script de los notebooks 13 / 14
+│   ├── features/                  # text_preprocessor, vectorizer, metadata, augmentation
+│   ├── models/                    # baseline (LR/RF/XGBoost), hybrid_ensemble, metadata_lr
+│   ├── pipeline/                  # run_pipeline + variantes por estrategia
+│   ├── service/                   # ModelService, meta_stack_predictor, model_catalog
+│   └── utils/                     # Logger
+├── supabase/predictions_setup.sql # SQL para crear la tabla predictions + políticas RLS
+├── tests/                         # Suite Pytest
+├── Dockerfile                     # Build multi-stage (frontend + backend con uv)
+├── docker-compose.yml             # Despliegue de un contenedor (API + SPA)
+├── render.yaml                    # Blueprint de Render (web service + static site)
+├── Procfile                       # Declaración de proceso para Render
+├── Makefile                       # make dev / install / build / docker / test
+├── pyproject.toml + uv.lock       # Dependencias Python fijadas con uv
+└── README.md  /  README.es.md     # Documentación en inglés / español
 ```
 
-- **BERT congelado** aporta señal semántica; los pesos no se entrenan (mismo checkpoint Hub que el baseline congelado).
-- **Metadatos** conservan estructura interpretable (puntuación, longitud, etc.).
-- **Regularización fuerte** y búsqueda de umbral en test mantienen la brecha por debajo del 5 % y cumplen el objetivo **F1 ≥ 0,80**.
+### Flujo de datos
 
-Implementación: [Notebook 14](notebooks/14_final_meta_stacking.ipynb) · `uv run python -m src.experiments.notebook_14_final_stack`
-
-### Hilo de notebooks
-
-
-| Notebooks           | Rol                                                                    |
-| ------------------- | ---------------------------------------------------------------------- |
-| `01`–`04`           | EDA, preprocesado, TF-IDF → baseline LR                                |
-| `12`                | Estrategia golden baseline (métricas Toxic-BERT congelado)             |
-| `14`                | Meta-stacking final → artefacto de producción                          |
-| `archive_attempts/` | Experimentos anteriores (05–11, 13); conservados para reproducibilidad |
-
-
----
-
-## Requisitos previos
-
-- **Python 3.12** (ver `.python-version`)
-- **[uv](https://docs.astral.sh/uv/)** para instalación y comandos
-- **Node.js 18+** para desarrollo local del frontend
-- **Opcional:** `YOUTUBE_API_KEY` para comentarios en vivo y miniaturas de vídeos sugeridos ([Google Cloud Console](https://console.cloud.google.com/apis/credentials))
-
-Los baselines con transformer y producción necesitan dependencias de Hugging Face:
-
-```bash
-uv sync --extra hf
-uv run python -c "import transformers; print('ok')"
+```
+                ┌────────────────────────────────────────────────┐
+                │  SPA React (Vite)         http://localhost:5173│
+                │  Layout · Watch · Hub · Settings               │
+                └──────────────────┬─────────────────────────────┘
+                                   │ HTTP JSON  (proxy Vite → :8000)
+                ┌──────────────────▼─────────────────────────────┐
+                │  FastAPI                  http://localhost:8000│
+                │  /predict  /predict-batch  /predict-video      │
+                │  /predictions (GET — histórico de Supabase)    │
+                │  /models  /models/select  /model-info          │
+                │  /videos/suggested  /health                    │
+                └──────┬─────────────────────────────┬───────────┘
+                       │                             │
+        ┌──────────────▼─────────────┐ ┌─────────────▼──────────────┐
+        │  ModelService              │ │  YouTube Data API v3       │
+        │  · local joblib            │ │  · metadatos de vídeo      │
+        │  · hf_remote               │ │  · 50 comentarios + nuevos │
+        │  · meta_stack (producción) │ │                            │
+        └──────┬─────────────────────┘ └────────────────────────────┘
+               │
+        ┌──────▼──────────────────────────────────────────────────┐
+        │  Supabase (PostgreSQL)                                  │
+        │  tabla: predictions(id, created_at, text, video_id,     │
+        │                     probability, is_toxic, labels, …)   │
+        │  RLS: insert anónimo + select anónimo                   │
+        └─────────────────────────────────────────────────────────┘
 ```
 
+### Catálogo de modelos (intercambiable desde la UI)
+
+| Modelo                           | Tipo        | F1 (test) | Brecha train–test | Umbral    | Latencia | Default |
+| -------------------------------- | ----------- | --------- | ----------------- | --------- | -------- | ------- |
+| **Meta-Feature Stacking**        | Híbrido     | **0,805** | **2,54 pp**       | **0,381** | ~400 ms  | **Sí**  |
+| Frozen Toxic-BERT                | Transformer | 0,790     | 0,16 pp           | 0,120     | ~400 ms  | No      |
+| LR + TF-IDF (Optuna)             | sklearn     | 0,758     | 4,76 pp           | 0,500     | < 50 ms  | No      |
+
+El modelo de producción concatena el embedding `[CLS]` congelado de `unitary/toxic-bert` (768-d) con metadatos hechos a mano (longitud, ratio de mayúsculas, densidad de emojis…), los escala con `StandardScaler` y los pasa por un meta-learner `LogisticRegression(C=0,001)`.
+
 ---
 
-## Instalación
+## Instalación y ejecución
+
+### 1. Requisitos previos
+
+| Herramienta  | macOS / Linux                       | Windows                                                  |
+| ------------ | ----------------------------------- | -------------------------------------------------------- |
+| **Python 3.12** | `brew install python@3.12`      | [python.org/downloads](https://www.python.org/downloads/) (marca *Add Python to PATH*) |
+| **uv**       | `curl -LsSf https://astral.sh/uv/install.sh \| sh` | `powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
+| **Node.js 18+** | `brew install node`             | [nodejs.org](https://nodejs.org/) (LTS)                 |
+| **pnpm**     | `npm i -g pnpm`                     | `npm i -g pnpm`                                          |
+| **Make** *(opcional)* | ya instalado               | `winget install GnuWin32.Make`  (o usa WSL)              |
+
+### 2. Clonar y configurar
 
 ```bash
-git clone <url-de-tu-repo>
-cd youtube_hate_detector
+git clone https://github.com/Bootcamp-IA-P6/Project_9_Equipo3.git
+cd Project_9_Equipo3
 
 cp .env.example .env
-# Edita .env: YOUTUBE_API_KEY, MODEL_NAME (opcional)
-
-uv sync --extra hf
+# Rellena: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY
 ```
 
-Coloca `youtoxic_english_1000.csv` en `data/raw/` si vas a reentrenar (el archivo está en `.gitignore`).
+> **PowerShell de Windows**: sustituye `cp` por `Copy-Item .env.example .env`.
 
----
+Pega `supabase/predictions_setup.sql` en el editor SQL de Supabase antes del primer arranque (crea la tabla `predictions` + políticas RLS).
 
-## Ejecución local (desarrollo)
+### 3. Arranque — tres opciones
 
-### 1. API
+#### Opción A — Con Makefile (recomendada en macOS / Linux / WSL)
 
 ```bash
+make install     # uv sync  +  pnpm install
+make dev         # FastAPI :8000  +  Vite :5173
+```
+
+| Comando       | Qué hace                                       |
+| ------------- | ---------------------------------------------- |
+| `make install`| Instala deps de Python + frontend              |
+| `make dev`    | Arranca API y UI en paralelo (Ctrl+C los para) |
+| `make api`    | Solo la API                                    |
+| `make ui`     | Solo la UI                                     |
+| `make build`  | Compila el SPA a `frontend/dist`               |
+| `make test`   | Ejecuta Pytest                                 |
+| `make docker` | `docker compose up --build`                    |
+| `make stop`   | Mata procesos en los puertos 8000 / 5173       |
+| `make clean`  | Borra `.venv`, `node_modules`, `dist`          |
+
+#### Opción B — Manual (macOS / Linux)
+
+Dos terminales.
+
+**Terminal 1 — API**
+```bash
+uv sync
 uv run uvicorn src.api.main:app --reload --port 8000
 ```
 
-
-| Recurso | URL                                                          |
-| ------- | ------------------------------------------------------------ |
-| Swagger | [http://localhost:8000/docs](http://localhost:8000/docs)     |
-| Health  | [http://localhost:8000/health](http://localhost:8000/health) |
-| OpenAPI | [http://localhost:8000/redoc](http://localhost:8000/redoc)   |
-
-
-Al arrancar, `ModelService` carga el modelo de `MODEL_NAME` (por defecto: **Meta-Feature Stacking (Production)**). La primera carga de un transformer puede descargar pesos de Hugging Face (~1 minuto sin caché).
-
-### 2. UI React
-
+**Terminal 2 — Frontend**
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Abre [http://localhost:5173](http://localhost:5173) — Vite hace proxy de las rutas API (`/predict`, `/models/status`, etc.) al puerto 8000.
+#### Opción C — Manual (PowerShell de Windows)
 
-**Página Watch:** vídeos sugeridos, puntuación de comentarios, análisis en vivo del borrador.  
-**Ajustes:** cambio entre los tres modelos del catálogo; slider de umbral (se actualiza al cambiar de modelo).  
-**Moderator Hub:** historial de comentarios puntuados en la sesión.
+Dos terminales.
 
-Banner de producción (desde `/model-info`): p. ej. *Meta-Feature Stacking Model (F1: 0.805, Gap: 2.54%)*.
+**Terminal 1 — API**
+```powershell
+uv sync
+uv run uvicorn src.api.main:app --reload --port 8000
+```
 
----
+**Terminal 2 — Frontend**
+```powershell
+cd frontend
+pnpm install
+pnpm dev
+```
 
-## Docker (API + UI compilada)
+> Si `uv` no se reconoce tras instalarlo, cierra y vuelve a abrir PowerShell para que se recargue el `PATH`.
+
+### 4. Abrir la aplicación
+
+| URL                            | Qué verás                                |
+| ------------------------------ | ---------------------------------------- |
+| http://localhost:5173          | SPA React — Watch / Hub / Settings       |
+| http://localhost:8000/docs     | Swagger de FastAPI                       |
+| http://localhost:8000/health   | Health check                             |
+
+### 5. Docker (un solo contenedor — API + SPA compilada)
+
+Mismos comandos en **macOS / Linux / Windows**:
 
 ```bash
-export YOUTUBE_API_KEY=tu_clave   # opcional pero recomendado para comentarios reales
+# Normal — deja imágenes y volúmenes para builds rápidos
 docker compose up --build
-```
+# → http://localhost:8000  ·  Ctrl+C para parar  ·  docker compose down
 
+# Demo efímera — Ctrl+C borra contenedor + imagen + volúmenes
+make docker-demo
 
-| URL                                                      | Servicio                                       |
-| -------------------------------------------------------- | ---------------------------------------------- |
-| [http://localhost:8000](http://localhost:8000)           | FastAPI + `frontend/dist` (un solo contenedor) |
-| [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger                                        |
-
-
-La imagen copia `models/baseline/` y `models/production_final/`. `INSTALL_HF=1` es el valor por defecto en `docker-compose.yml` para producción y el baseline BERT congelado. Para una imagen solo sklearn (baseline LR):
-
-```bash
-INSTALL_HF=0 docker compose build --build-arg INSTALL_HF=0
+# Limpieza manual completa
+make docker-clean
+# (equivale a: docker compose down --rmi local --volumes --remove-orphans)
 ```
 
 ---
 
-## Resumen de la API
-
-Referencia completa: [docs/API.es.md](docs/API.es.md) · [docs/API.md](docs/API.md)
-
-
-| Método | Ruta                | Descripción                                                           |
-| ------ | ------------------- | --------------------------------------------------------------------- |
-| `POST` | `/predict`          | Puntúa un comentario `{ "text", "threshold" }`                        |
-| `POST` | `/predict-batch`    | Hasta 100 textos                                                      |
-| `POST` | `/predict-video`    | Obtiene comentarios de YouTube y los puntúa (API key o fallback demo) |
-| `GET`  | `/videos/suggested` | Metadatos del carril derecho (`configs/suggested_videos.yaml`)        |
-| `GET`  | `/models/status`    | Catálogo + disponibilidad (joblib / deps HF)                          |
-| `POST` | `/models/select`    | Cambia de modelo `{ "model_name": "..." }`                            |
-| `GET`  | `/model-info`       | Metadatos del modelo activo (banner, umbral recomendado)              |
-
-
-**Ejemplo**
-
-```bash
-curl -s -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Thanks for the great tutorial!", "threshold": 0.381}'
-```
-
-Cambiar al baseline LR:
-
-```bash
-curl -s -X POST http://localhost:8000/models/select \
-  -H "Content-Type: application/json" \
-  -d '{"model_name": "LR + TF-IDF (Baseline)"}'
-```
+Más detalle: [docs/PIPELINE.es.md](docs/PIPELINE.es.md) para entrenamiento, [docs/API.es.md](docs/API.es.md) para endpoints, [docs/DEPLOY.md](docs/DEPLOY.md) para despliegue en Render.
 
 ---
 
-## Estructura del proyecto
+## Colaboradores
 
-```
-youtube_hate_detector/
-├── configs/
-│   ├── model_catalog.yaml      # Modelos de demo (baselines + producción)
-│   ├── pipeline.yaml           # Rutas de entrenamiento
-│   ├── features.yaml
-│   └── suggested_videos.yaml
-├── data/
-│   ├── raw/                    # CSV fuente (git-ignored)
-│   └── processed/              # Exportaciones preprocesadas
-├── frontend/                   # React + Vite
-├── models/
-│   ├── baseline/               # lr_tfidf.joblib, manifest.json
-│   ├── production_final/       # meta_stack_final.joblib
-│   └── README.md
-├── notebooks/
-│   ├── 01–03, 12, 14           # Hilo principal
-│   └── archive_attempts/       # 04–11, 13
-├── reports/
-│   ├── HANDOVER_REPORT.md
-│   ├── notebook_14/
-│   ├── golden_baseline/
-│   └── v2/                     # Figuras EDA del equipo
-├── src/
-│   ├── api/                    # Rutas FastAPI
-│   ├── service/                # ModelService, predictor meta-stack
-│   ├── pipeline/               # Pipelines de entrenamiento
-│   ├── features/
-│   └── evaluation/
-├── tests/
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-└── uv.lock
-```
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <b>Andrés Torrez</b><br/>
+      <sub>Backend Developer</sub>
+    </td>
+    <td align="center" width="25%">
+      <b>Mirae Kang</b><br/>
+      <sub>Scrum Master</sub>
+    </td>
+    <td align="center" width="25%">
+      <b>Jonathan Brasales</b><br/>
+      <sub>AI Developer</sub>
+    </td>
+    <td align="center" width="25%">
+      <b>Roberto Molero</b><br/>
+      <sub>Product Owner</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## Entrenamiento y reproducción de métricas
+<div align="center">
 
+**SignalMod** — Bootcamp IA P6 · Equipo 3 · 2026
 
-| Objetivo                         | Comando                                                      |
-| -------------------------------- | ------------------------------------------------------------ |
-| Baseline LR + TF-IDF             | `uv run python -m src.pipeline.run_pipeline --model lr`      |
-| Informes baseline BERT congelado | `uv run python -m src.pipeline.run_golden_baseline_pipeline` |
-| Meta-stack de producción         | `uv run python -m src.experiments.notebook_14_final_stack`   |
-
-
-Detalle del pipeline: [docs/PIPELINE.es.md](docs/PIPELINE.es.md) · Resultados agregados: [docs/RESULTS.es.md](docs/RESULTS.es.md) · Ejecuciones históricas: `[reports/summary.csv](reports/summary.csv)`
-
----
-
-## Configuración
-
-
-| Archivo                         | Uso                                                                     |
-| ------------------------------- | ----------------------------------------------------------------------- |
-| `.env`                          | `YOUTUBE_API_KEY`, `MODEL_NAME`, `ENV`                                  |
-| `configs/model_catalog.yaml`    | Catálogo de inferencia (editar y reiniciar la API para añadir entradas) |
-| `configs/suggested_videos.yaml` | IDs de vídeo del carril sugerido                                        |
-| `configs/best_params.yaml`      | Referencia Optuna LR para el baseline                                   |
-
-
-No hagas commit de `.env`. Haz commit de `uv.lock` cuando cambien las dependencias.
-
----
-
-## Tests
-
-```bash
-uv sync --extra dev --extra hf
-uv run pytest
-```
-
-Cubre contratos de la API, preprocesado y cableado del catálogo para los tres modelos de demo.
-
----
-
-## Índice de documentación
-
-
-| English                                                  | Español                                            |
-| -------------------------------------------------------- | -------------------------------------------------- |
-| [docs/API.md](docs/API.md)                               | [docs/API.es.md](docs/API.es.md)                   |
-| [docs/PIPELINE.md](docs/PIPELINE.md)                     | [docs/PIPELINE.es.md](docs/PIPELINE.es.md)         |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)             | [docs/ARCHITECTURE.es.md](docs/ARCHITECTURE.es.md) |
-| [docs/RESULTS.md](docs/RESULTS.md)                       | [docs/RESULTS.es.md](docs/RESULTS.es.md)           |
-| [reports/HANDOVER_REPORT.md](reports/HANDOVER_REPORT.md) |                                                    |
-
-
----
-
-## Licencia y datos
-
-Usa el dataset del proyecto y las claves de API según las normas de tu curso u organización. El uso de YouTube Data API debe cumplir las [condiciones de Google](https://developers.google.com/youtube/terms/api-services-terms-of-service).
+</div>
