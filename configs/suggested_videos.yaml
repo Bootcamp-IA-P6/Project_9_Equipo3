@@ -2,7 +2,7 @@
 # max_comments: cap for /predict-video when a rail video is selected.
 # Default player embed (no comments until you pick a rail video): frontend/src/pages/WatchPage.tsx → DEFAULT_EMBED_VIDEO_ID
 # Prefer embed-friendly videos with comments enabled (avoid Vevo music IDs).
-max_comments: 15
+max_comments: 50
 
 videos:
   - id: jNQXAC9IVRw

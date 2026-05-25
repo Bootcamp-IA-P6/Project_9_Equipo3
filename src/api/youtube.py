@@ -93,6 +93,7 @@ def _fetch_via_api(
                     maxResults=min(100, max_comments - len(comments)),
                     pageToken=page_token,
                     textFormat="plainText",
+                    order="time",  # newest first
                 )
                 .execute()
             )
