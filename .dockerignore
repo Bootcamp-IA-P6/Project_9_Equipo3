@@ -20,6 +20,7 @@ tests
 !README.md
 .env
 .env.*
+!.env.example
 frontend/dist
 models/checkpoints
 models/**/checkpoints
@@ -28,4 +29,3 @@ models/roberta_hate_results
 models/distilbert_results
 models/best_distilbert
 models/nb08_*
-models/*_frozen

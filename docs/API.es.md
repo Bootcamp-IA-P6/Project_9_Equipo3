@@ -40,7 +40,7 @@ Implementación: [`src/api/main.py`](../src/api/main.py)
   "is_toxic": false,
   "probability": 0.08,
   "labels": [],
-  "model_used": "LR + TF-IDF (local)",
+  "model_used": "Meta-Feature Stacking (Production)",
   "latency_ms": 15.2
 }
 ```
@@ -82,11 +82,29 @@ Requiere `YOUTUBE_API_KEY` en `.env` para comentarios reales.
 
 ---
 
+## Modelos del demo
+
+[`configs/model_catalog.yaml`](../configs/model_catalog.yaml) · métricas baselines: [`models/baseline/manifest.json`](../models/baseline/manifest.json)
+
+| Nombre | Artefacto / pesos |
+|--------|-------------------|
+| `Meta-Feature Stacking (Production)` | `models/production_final/meta_stack_final.joblib` |
+| `LR + TF-IDF (Baseline)` | `models/baseline/lr_tfidf.joblib` |
+| `Frozen Toxic-BERT (Baseline)` | Hugging Face `unitary/toxic-bert` |
+
+```bash
+curl -s -X POST http://localhost:8000/models/select \
+  -H "Content-Type: application/json" \
+  -d '{"model_name": "LR + TF-IDF (Baseline)"}'
+```
+
+---
+
 ## Variables de entorno
 
 | Variable | Descripción |
 |----------|-------------|
-| `MODEL_NAME` | Modelo al arrancar la API |
+| `MODEL_NAME` | Por defecto: Meta-Feature Stacking (Production) |
 | `YOUTUBE_API_KEY` | API de YouTube para `/predict-video` |
 
 Ver [`.env.example`](../.env.example).

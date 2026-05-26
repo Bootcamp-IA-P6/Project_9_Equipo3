@@ -5,6 +5,13 @@ models:
     class_weight: balanced
     solver: lbfgs
 
+  # High regularization path for stable hybrid ensemble (see stable_training.yaml)
+  logistic_regression_stable:
+    C: 0.01
+    max_iter: 2000
+    class_weight: balanced
+    solver: lbfgs
+
   random_forest:
     n_estimators: 100
     max_depth: 10

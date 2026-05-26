@@ -36,7 +36,7 @@ Inference: [`src/service/model_service.py`](../src/service/model_service.py)
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `text` | string | yes | 1–5000 characters, non-empty after trim |
-| `threshold` | float | no | Toxic if `probability >= threshold` (default `0.5`) |
+| `threshold` | float | no | Toxic if `probability >= threshold` (**0.381** production, **0.5** LR baseline, **0.12** frozen BERT baseline) |
 
 **Response**
 
@@ -46,7 +46,7 @@ Inference: [`src/service/model_service.py`](../src/service/model_service.py)
   "is_toxic": false,
   "probability": 0.0821,
   "labels": [],
-  "model_used": "LR + TF-IDF (local)",
+  "model_used": "Meta-Feature Stacking (Production)",
   "latency_ms": 15.2
 }
 ```
@@ -111,18 +111,23 @@ Set `YOUTUBE_API_KEY` in `.env` for live comment fetch. Without a key, the API m
 
 ## `GET /models` and model switch
 
-```bash
-curl -s http://localhost:8000/models
+Demo models from [`configs/model_catalog.yaml`](../configs/model_catalog.yaml):
 
-curl -s -X PUT "http://localhost:8000/model/LR%20%2B%20TF-IDF%20(local)"
+| Name | Type | Artifact / weights |
+|------|------|-------------------|
+| `Meta-Feature Stacking (Production)` | meta_stack | `models/production_final/meta_stack_final.joblib` |
+| `LR + TF-IDF (Baseline)` | local | `models/baseline/lr_tfidf.joblib` |
+| `Frozen Toxic-BERT (Baseline)` | hf_remote | Hugging Face `unitary/toxic-bert` |
+
+```bash
+curl -s http://localhost:8000/models/status
+
+curl -s -X POST http://localhost:8000/models/select \
+  -H "Content-Type: application/json" \
+  -d '{"model_name": "LR + TF-IDF (Baseline)"}'
 ```
 
-Available names match keys in `AVAILABLE_MODELS` inside `model_service.py`, for example:
-
-- `LR + TF-IDF (local)` — default, `models/final_model.joblib`
-- `DistilBERT Toxicity` — Hugging Face remote (requires `transformers`, `torch`)
-- `toxic-bert (multilabel)`
-- `RoBERTa Toxicity`
+Default at startup: `Meta-Feature Stacking (Production)` (`MODEL_NAME` in `.env`).
 
 ---
 
