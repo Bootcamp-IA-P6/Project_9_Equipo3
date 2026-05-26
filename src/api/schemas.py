@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field, field_validator
 class PredictRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=5000)
     threshold: float = Field(0.5, ge=0.0, le=1.0)
+    video_id: Optional[str] = None
+    author: Optional[str] = None
+    persist: bool = True
 
     @field_validator("text")
     @classmethod
