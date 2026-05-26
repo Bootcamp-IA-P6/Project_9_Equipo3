@@ -54,6 +54,8 @@ export type PredictionRecord = {
   video_id?: string | null;
   created_at: string;
   labels?: string[];
+  source?: string | null;
+  author?: string | null;
 };
 
 export type PredictionsListResponse = {

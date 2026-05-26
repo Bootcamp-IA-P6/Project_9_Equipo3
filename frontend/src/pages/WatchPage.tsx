@@ -51,9 +51,13 @@ export function WatchPage() {
   const { result, loading, error } = useDebouncedPredict(draft, threshold);
 
   const refreshRecent = useCallback(async (videoId?: string) => {
+    if (!videoId) {
+      setRecentActivity([]);
+      return;
+    }
     setRecentLoading(true);
     try {
-      const res = await listPredictions(videoId, 20);
+      const res = await listPredictions(videoId, 200, "user_comment");
       setRecentActivity(Array.isArray(res?.predictions) ? res.predictions : []);
     } catch {
       // Degrade gracefully if endpoint is missing or DB not configured
@@ -86,8 +90,12 @@ export function WatchPage() {
     if (!text || posting) return;
     setPosting(true);
     try {
-      const analysis = result ?? (await predict(text, threshold));
       const author = randomTeamMember();
+      const analysis = await predict(text, threshold, {
+        videoId: activeVideo?.id,
+        author,
+        persist: true,
+      });
       const item: CommentItem = {
         id: newId(),
         user: author,
@@ -112,7 +120,7 @@ export function WatchPage() {
     } finally {
       setPosting(false);
     }
-  }, [draft, posting, result, threshold, addHubEntry, refreshRecent, activeVideo?.id, t]);
+  }, [draft, posting, threshold, addHubEntry, refreshRecent, activeVideo?.id, t]);
 
   const loadVideo = async (video: SuggestedVideo) => {
     setActiveVideo(video);
@@ -286,26 +294,36 @@ export function WatchPage() {
           )}
 
           <div className="comment-list">
-            {/* Local Supabase comments — always at the top (newest first) */}
-            {recentActivity.map((rec, idx) => (
-              <CommentRow
-                key={`recent-${rec.id ?? idx}`}
-                comment={{
-                  id: `recent-${rec.id ?? idx}`,
-                  user: randomUsername(`supa-${rec.id ?? idx}`),
-                  text: truncate(rec.text, 140),
-                  time: relativeTime(rec.created_at),
-                  is_toxic: rec.is_toxic,
-                  probability: rec.probability,
-                  labels: rec.labels ?? [],
-                  source: "recent",
-                }}
-              />
-            ))}
-            {/* Current session (just posted) */}
-            {[...sessionComments].reverse().map((c) => (
-              <CommentRow key={c.id} comment={c} />
-            ))}
+            {/* Persisted user comments for this video — always at the top (newest first) */}
+            {recentActivity
+              .filter((rec) => rec.source === "user_comment")
+              .map((rec, idx) => (
+                <CommentRow
+                  key={`recent-${rec.id ?? idx}`}
+                  comment={{
+                    id: `recent-${rec.id ?? idx}`,
+                    user: rec.author ?? randomUsername(`supa-${rec.id ?? idx}`),
+                    text: truncate(rec.text, 140),
+                    time: relativeTime(rec.created_at),
+                    is_toxic: rec.is_toxic,
+                    probability: rec.probability,
+                    labels: rec.labels ?? [],
+                    source: "recent",
+                  }}
+                />
+              ))}
+            {/* Optimistic local additions until refresh from Supabase completes */}
+            {[...sessionComments]
+              .reverse()
+              .filter(
+                (c) =>
+                  !recentActivity.some(
+                    (r) => r.text === c.text && r.author === c.user,
+                  ),
+              )
+              .map((c) => (
+                <CommentRow key={c.id} comment={c} />
+              ))}
             {/* YouTube fetched comments — below */}
             {youtubeComments.map((c) => (
               <CommentRow key={c.id} comment={c} />
