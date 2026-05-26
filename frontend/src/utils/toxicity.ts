@@ -13,6 +13,17 @@ export function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export const TEAM_MEMBERS = [
+  "Roberto Molero",
+  "Mirae Kang",
+  "Jonathan Brasales",
+  "Andrés Torrez",
+] as const;
+
+export function randomTeamMember(): string {
+  return TEAM_MEMBERS[Math.floor(Math.random() * TEAM_MEMBERS.length)];
+}
+
 const RTF = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
 
 const TIME_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [

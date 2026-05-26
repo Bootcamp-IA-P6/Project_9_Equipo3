@@ -18,6 +18,7 @@ import type {
 import {
   formatPct,
   newId,
+  randomTeamMember,
   randomUsername,
   relativeTime,
   toxicityColor,
@@ -86,9 +87,10 @@ export function WatchPage() {
     setPosting(true);
     try {
       const analysis = result ?? (await predict(text, threshold));
+      const author = randomTeamMember();
       const item: CommentItem = {
         id: newId(),
-        user: t.watch.you,
+        user: author,
         text,
         time: t.watch.justNow,
         is_toxic: analysis.is_toxic,
@@ -98,7 +100,7 @@ export function WatchPage() {
       };
       setSessionComments((prev) => [...prev, item]);
       addHubEntry({
-        user: `@${t.watch.you}`,
+        user: `@${author}`,
         snippet: text.slice(0, 45),
         score: analysis.probability,
         action: analysis.is_toxic
