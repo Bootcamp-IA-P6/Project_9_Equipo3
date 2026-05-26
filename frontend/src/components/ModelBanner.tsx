@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 import { getModelInfo } from "../api/client";
+import { useI18n } from "../i18n/I18nContext";
 
 export function ModelBanner() {
+  const { t } = useI18n();
   const [banner, setBanner] = useState<string | null>(null);
 
   useEffect(() => {
+    const fallback = t.modelBanner.current("Meta-Feature Stacking", "0.805", "2.54");
     getModelInfo()
       .then((info) => {
-        const text =
-          (info as { display_banner?: string }).display_banner ??
-          (info.name?.includes("Meta-Feature Stacking")
-            ? "Currently using: Meta-Feature Stacking Model (F1: 0.805, Gap: 2.54%)"
-            : null);
-        setBanner(text);
+        const apiBanner = (info as { display_banner?: string }).display_banner;
+        if (apiBanner) {
+          setBanner(apiBanner);
+          return;
+        }
+        if (info.name?.includes("Meta-Feature Stacking")) {
+          setBanner(fallback);
+          return;
+        }
+        setBanner(null);
       })
       .catch(() => {
-        setBanner(
-          "Currently using: Meta-Feature Stacking Model (F1: 0.805, Gap: 2.54%)"
-        );
+        setBanner(fallback);
       });
-  }, []);
+  }, [t]);
 
   if (!banner) return null;
 

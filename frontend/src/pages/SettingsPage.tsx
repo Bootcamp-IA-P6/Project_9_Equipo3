@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { getModelInfo, getModelsStatus, predict, setModel } from "../api/client";
 import { useApp } from "../context/AppContext";
+import { useI18n } from "../i18n/I18nContext";
 import type { ModelStatusEntry } from "../types/api";
 
 export function SettingsPage() {
   const { threshold, setThreshold } = useApp();
+  const { t } = useI18n();
   const [modelStatus, setModelStatus] = useState<ModelStatusEntry[]>([]);
   const [active, setActive] = useState("");
-  const [testText, setTestText] = useState("You are an idiot");
+  const [testText, setTestText] = useState<string>(() => t.settings.defaultTestText);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageIsError, setMessageIsError] = useState(false);
   const [switching, setSwitching] = useState(false);
 
   const loadStatus = () => {
@@ -20,11 +23,15 @@ export function SettingsPage() {
         setModelStatus(r.models);
         setActive(r.active);
       })
-      .catch(() => setMessage("Could not load model status"));
+      .catch(() => {
+        setMessage(t.settings.couldNotLoadStatus);
+        setMessageIsError(true);
+      });
   };
 
   useEffect(() => {
     loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -35,22 +42,26 @@ export function SettingsPage() {
   const switchModel = async (name: string) => {
     const entry = modelStatus.find((m) => m.name === name);
     if (entry && !entry.available) {
-      setMessage(entry.reason ?? "Model unavailable");
+      setMessage(entry.reason ?? "");
+      setMessageIsError(true);
       return;
     }
     setMessage(null);
+    setMessageIsError(false);
     setSwitching(true);
     try {
       await setModel(name);
       setActive(name);
-      setMessage(`Active model: ${name}`);
+      setMessage(t.settings.activeModelMsg(name));
+      setMessageIsError(false);
       const info = await getModelInfo();
       if (info.recommended_threshold != null) {
         setThreshold(info.recommended_threshold);
       }
       loadStatus();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Failed to switch model");
+      setMessage(e instanceof Error ? e.message : t.settings.failedSwitch);
+      setMessageIsError(true);
       loadStatus();
     } finally {
       setSwitching(false);
@@ -63,9 +74,14 @@ export function SettingsPage() {
     setTestError(null);
     try {
       const r = await predict(testText, threshold);
-      setTestResult(`${r.status} — ${Math.round(r.probability * 100)}% toxic`);
+      setTestResult(
+        t.settings.testResult(
+          r.is_toxic ? t.badges.toxic : t.badges.safe,
+          String(Math.round(r.probability * 100))
+        )
+      );
     } catch (e) {
-      setTestError(e instanceof Error ? e.message : "Analysis failed");
+      setTestError(e instanceof Error ? e.message : t.settings.analysisFailed);
     } finally {
       setTesting(false);
     }
@@ -73,22 +89,13 @@ export function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <h1>Settings</h1>
+      <h1>{t.settings.title}</h1>
       <section className="settings-card">
-        <h2>Active model</h2>
-        <p className="production-model-note">
-          Default: <strong>Meta-Feature Stacking (Production)</strong> (F1 0.805, gap 2.54%).
-          Baselines: <strong>LR + TF-IDF</strong> (F1 0.758) and{" "}
-          <strong>Frozen Toxic-BERT</strong> (F1 0.790, gap 0.16%).
-        </p>
-        <p className="hint">
-          Production and frozen BERT need <code>uv sync --extra hf</code> (or Docker{" "}
-          <code>INSTALL_HF=1</code>). LR baseline uses joblib only. First transformer load may
-          download weights (~1 min).
-        </p>
-        {switching && (
-          <p className="hint">Switching model… production may take up to a minute on first load.</p>
-        )}
+        <h2>{t.settings.activeModel}</h2>
+        <p className="production-model-note">{t.settings.productionNote("0.805", "2.54")}</p>
+        <p className="production-model-note">{t.settings.baselinesNote("0.758", "0.790", "0.16")}</p>
+        <p className="hint">{t.settings.installHint}</p>
+        {switching && <p className="hint">{t.settings.switching}</p>}
         <div className="model-list">
           {modelStatus.map((m) => (
             <label
@@ -112,14 +119,14 @@ export function SettingsPage() {
           ))}
         </div>
         {message && (
-          <p className={message.includes("Failed") || message.includes("Install") ? "error-text" : "settings-msg"}>
+          <p className={messageIsError ? "error-text" : "settings-msg"}>
             {message}
           </p>
         )}
       </section>
 
       <section className="settings-card">
-        <h2>Toxicity threshold</h2>
+        <h2>{t.settings.thresholdTitle}</h2>
         <input
           type="range"
           min={0.1}
@@ -128,11 +135,13 @@ export function SettingsPage() {
           value={threshold}
           onChange={(e) => setThreshold(Number(e.target.value))}
         />
-        <p>{threshold.toFixed(2)} — comments at or above this probability are <strong>Toxic</strong>.</p>
+        <p>
+          {threshold.toFixed(2)} — {t.settings.thresholdNote}
+        </p>
       </section>
 
       <section className="settings-card">
-        <h2>Quick test</h2>
+        <h2>{t.settings.quickTest}</h2>
         <textarea value={testText} onChange={(e) => setTestText(e.target.value)} rows={2} />
         <button
           type="button"
@@ -140,7 +149,7 @@ export function SettingsPage() {
           disabled={testing || !testText.trim()}
           onClick={() => void runTest()}
         >
-          {testing ? "Analyzing…" : "Analyze"}
+          {testing ? t.settings.analyzing : t.settings.analyze}
         </button>
         {testResult && <p className="settings-msg">{testResult}</p>}
         {testError && <p className="error-text">{testError}</p>}
