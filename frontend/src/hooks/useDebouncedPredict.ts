@@ -6,7 +6,7 @@ export function useDebouncedPredict(text: string, threshold: number, delayMs = 4
   const [result, setResult] = useState<PredictResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const seqRef = useRef(0);
 
   useEffect(() => {
     const trimmed = text.trim();
@@ -17,14 +17,21 @@ export function useDebouncedPredict(text: string, threshold: number, delayMs = 4
       return;
     }
 
+    setLoading(true);
+    const seq = ++seqRef.current;
+
     const timer = setTimeout(() => {
-      abortRef.current?.abort();
-      setLoading(true);
       setError(null);
       predict(trimmed, threshold)
-        .then(setResult)
-        .catch((e: Error) => setError(e.message))
-        .finally(() => setLoading(false));
+        .then((res) => {
+          if (seq === seqRef.current) setResult(res);
+        })
+        .catch((e: Error) => {
+          if (seq === seqRef.current) setError(e.message);
+        })
+        .finally(() => {
+          if (seq === seqRef.current) setLoading(false);
+        });
     }, delayMs);
 
     return () => clearTimeout(timer);

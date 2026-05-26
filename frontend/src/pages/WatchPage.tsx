@@ -218,7 +218,7 @@ export function WatchPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  void handlePost();
+                  if (!loading) void handlePost();
                 }
               }}
               placeholder="Add a comment…"
@@ -254,9 +254,9 @@ export function WatchPage() {
                 type="button"
                 className="btn-primary"
                 onClick={() => void handlePost()}
-                disabled={posting || !draft.trim()}
+                disabled={posting || !draft.trim() || loading}
               >
-                {posting ? "Analyzing…" : "Comment"}
+                {posting ? "Posting…" : loading ? "Analyzing…" : "Comment"}
               </button>
             </div>
           </div>

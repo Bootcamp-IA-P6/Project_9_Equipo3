@@ -28,11 +28,7 @@ RUN apt-get update \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock* README.md ./
-RUN if [ "$INSTALL_HF" = "1" ]; then \
-      uv sync --frozen --no-dev --extra hf 2>/dev/null || uv sync --no-dev --extra hf; \
-    else \
-      uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev; \
-    fi
+RUN uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev
 
 RUN uv run python -m spacy download en_core_web_sm \
     && uv run python - <<'PY'
