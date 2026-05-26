@@ -21,7 +21,7 @@ export function useDebouncedPredict(text: string, threshold: number, delayMs = 4
       abortRef.current?.abort();
       setLoading(true);
       setError(null);
-      predict(trimmed, threshold)
+      predict(trimmed, threshold, { persist: false })
         .then(setResult)
         .catch((e: Error) => setError(e.message))
         .finally(() => setLoading(false));
