@@ -17,8 +17,12 @@ create table if not exists public.predictions (
     model_used  text,
     threshold   double precision,
     latency_ms  double precision,
-    source      text          -- "api_direct" | "video_fetch" | "user_comment"
+    source      text,         -- "api_direct" | "video_fetch" | "user_comment"
+    author      text
 );
+
+-- Migration: add author column on existing installs
+alter table public.predictions add column if not exists author text;
 
 -- 2. Indexes for the queries the API will run
 create index if not exists predictions_created_at_idx

@@ -9,6 +9,7 @@ import { CommentRow } from "../components/CommentRow";
 import { SuggestedRail } from "../components/SuggestedRail";
 import { useApp } from "../context/AppContext";
 import { useDebouncedPredict } from "../hooks/useDebouncedPredict";
+import { useI18n } from "../i18n/I18nContext";
 import type {
   CommentItem,
   PredictionRecord,
@@ -17,6 +18,7 @@ import type {
 import {
   formatPct,
   newId,
+  randomTeamMember,
   randomUsername,
   relativeTime,
   toxicityColor,
@@ -30,6 +32,7 @@ function isPlaceholderTitle(title: string, id: string): boolean {
 }
 
 export function WatchPage() {
+  const { t } = useI18n();
   const { threshold, addHubEntry } = useApp();
   const [draft, setDraft] = useState("");
   const [sessionComments, setSessionComments] = useState<CommentItem[]>([]);
@@ -48,9 +51,13 @@ export function WatchPage() {
   const { result, loading, error } = useDebouncedPredict(draft, threshold);
 
   const refreshRecent = useCallback(async (videoId?: string) => {
+    if (!videoId) {
+      setRecentActivity([]);
+      return;
+    }
     setRecentLoading(true);
     try {
-      const res = await listPredictions(videoId, 20);
+      const res = await listPredictions(videoId, 200, "user_comment");
       setRecentActivity(Array.isArray(res?.predictions) ? res.predictions : []);
     } catch {
       // Degrade gracefully if endpoint is missing or DB not configured
@@ -74,7 +81,7 @@ export function WatchPage() {
           void loadVideo(r.videos[0]);
         }
       })
-      .catch(() => setFetchError("Could not load suggested videos"));
+      .catch(() => setFetchError(t.watch.couldNotLoadVideos));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -83,12 +90,17 @@ export function WatchPage() {
     if (!text || posting) return;
     setPosting(true);
     try {
-      const analysis = result ?? (await predict(text, threshold));
+      const author = randomTeamMember();
+      const analysis = await predict(text, threshold, {
+        videoId: activeVideo?.id,
+        author,
+        persist: true,
+      });
       const item: CommentItem = {
         id: newId(),
-        user: "you",
+        user: author,
         text,
-        time: "just now",
+        time: t.watch.justNow,
         is_toxic: analysis.is_toxic,
         probability: analysis.probability,
         labels: analysis.labels,
@@ -96,17 +108,19 @@ export function WatchPage() {
       };
       setSessionComments((prev) => [...prev, item]);
       addHubEntry({
-        user: "@you",
+        user: `@${author}`,
         snippet: text.slice(0, 45),
         score: analysis.probability,
-        action: analysis.is_toxic ? "Posted (toxic)" : "Approved",
+        action: analysis.is_toxic
+          ? `${t.watch.posted} (${t.badges.toxic.toLowerCase()})`
+          : t.badges.safe,
       });
       setDraft("");
       void refreshRecent(activeVideo?.id);
     } finally {
       setPosting(false);
     }
-  }, [draft, posting, result, threshold, addHubEntry, refreshRecent, activeVideo?.id]);
+  }, [draft, posting, threshold, addHubEntry, refreshRecent, activeVideo?.id, t]);
 
   const loadVideo = async (video: SuggestedVideo) => {
     setActiveVideo(video);
@@ -123,7 +137,7 @@ export function WatchPage() {
           id: `yt-${video.id}-${i}`,
           user: randomUsername(`yt-${video.id}-${i}`),
           text: r.text,
-          time: "from YouTube",
+          time: t.watch.fromYoutube,
           is_toxic: r.is_toxic,
           probability: r.probability,
           labels: r.labels,
@@ -131,7 +145,7 @@ export function WatchPage() {
         }))
       );
     } catch (e) {
-      setFetchError(e instanceof Error ? e.message : "Failed to load comments");
+      setFetchError(e instanceof Error ? e.message : t.watch.failedToLoadComments);
       setYoutubeComments([]);
       setDemoBanner(false);
     } finally {
@@ -162,16 +176,16 @@ export function WatchPage() {
                   alt=""
                   className="player-fallback-thumb"
                 />
-                <span className="player-fallback-cta">Watch on YouTube (embedding blocked)</span>
+                <span className="player-fallback-cta">{t.watch.watchOnYoutube}</span>
               </a>
             ) : (
               <iframe
                 className="player-iframe"
                 src={`https://www.youtube.com/embed/${
                   activeVideo?.id ?? DEFAULT_EMBED_VIDEO_ID
-                }?rel=0${activeVideo ? "&autoplay=1" : ""}`}
+                }?rel=0`}
                 title={activeVideo?.title ?? "YouTube video player"}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
                 loading="lazy"
@@ -180,33 +194,31 @@ export function WatchPage() {
           </div>
 
           <h1 className="video-title">
-            {activeVideo?.title ?? "Watch and moderate comments"}
+            {activeVideo?.title ?? t.watch.defaultTitle}
           </h1>
           <p className="video-meta">
             {activeVideo
               ? activeVideo.channel_title
-              : "Choose a video from Up next to load and score its comments"}
+              : t.watch.defaultMeta}
           </p>
 
           {activeVideo && isPlaceholderTitle(activeVideo.title, activeVideo.id) && (
-            <p className="info-banner">
-              Demo metadata — add <code>YOUTUBE_API_KEY</code> to <code>.env</code> for real titles.
-            </p>
+            <p className="info-banner">{t.watch.placeholderTitleBanner}</p>
           )}
 
           <div className="channel-row">
             <div className="channel-avatar">{channelInitial}</div>
             <div>
-              <p className="channel-name">{activeVideo?.channel_title ?? "YouTube"}</p>
-              {activeVideo && <p className="video-meta">Suggested video</p>}
+              <p className="channel-name">{activeVideo?.channel_title ?? t.watch.channelFallback}</p>
+              {activeVideo && <p className="video-meta">{t.watch.suggestedVideo}</p>}
             </div>
           </div>
 
           <div className="comments-header">
             <span>
-              {totalComments} comments
+              {t.watch.commentsCount(totalComments)}
               {toxicManual + toxicYt > 0 && (
-                <span className="toxic-count"> · {toxicManual + toxicYt} toxic detected</span>
+                <span className="toxic-count">{t.watch.toxicDetected(toxicManual + toxicYt)}</span>
               )}
             </span>
           </div>
@@ -221,20 +233,20 @@ export function WatchPage() {
                   void handlePost();
                 }
               }}
-              placeholder="Add a comment…"
+              placeholder={t.watch.composePlaceholder}
               rows={3}
-              aria-label="Write a comment"
+              aria-label={t.watch.composeAriaLabel}
             />
             {draft.trim() && (
               <div className="live-analysis">
-                <span>{loading ? "Analyzing…" : "Live score"}</span>
+                <span>{loading ? t.watch.analyzing : t.watch.liveScore}</span>
                 {result && (
                   <>
                     <span className={`badge ${result.is_toxic ? "badge-toxic" : "badge-safe"}`}>
-                      {result.status}
+                      {result.is_toxic ? t.badges.toxic : t.badges.safe}
                     </span>
                     <span style={{ color: toxicityColor(result.probability) }}>
-                      Toxicity: {formatPct(result.probability)}
+                      {`${t.watch.toxicity}: ${formatPct(result.probability)}`}
                     </span>
                   </>
                 )}
@@ -248,7 +260,7 @@ export function WatchPage() {
                 onClick={() => setDraft("")}
                 disabled={posting}
               >
-                Cancel
+                {t.watch.cancel}
               </button>
               <button
                 type="button"
@@ -256,7 +268,7 @@ export function WatchPage() {
                 onClick={() => void handlePost()}
                 disabled={posting || !draft.trim()}
               >
-                {posting ? "Analyzing…" : "Comment"}
+                {posting ? t.watch.analyzing : t.watch.comment}
               </button>
             </div>
           </div>
@@ -265,15 +277,12 @@ export function WatchPage() {
 
           {demoBanner && !dismissDemoBanner && (
             <div className="info-banner dismissible">
-              <span>
-                Using demo comments — add <code>YOUTUBE_API_KEY</code> to <code>.env</code> for real
-                YouTube threads.
-              </span>
+              <span>{t.watch.demoBanner}</span>
               <button
                 type="button"
                 className="btn-dismiss"
                 onClick={() => setDismissDemoBanner(true)}
-                aria-label="Dismiss"
+                aria-label={t.watch.dismiss}
               >
                 ×
               </button>
@@ -281,30 +290,40 @@ export function WatchPage() {
           )}
 
           {loadingVideoId && youtubeComments.length === 0 && (
-            <p className="loading-comments">Loading comments…</p>
+            <p className="loading-comments">{t.watch.loadingComments}</p>
           )}
 
           <div className="comment-list">
-            {/* Local Supabase comments — always at the top (newest first) */}
-            {recentActivity.map((rec, idx) => (
-              <CommentRow
-                key={`recent-${rec.id ?? idx}`}
-                comment={{
-                  id: `recent-${rec.id ?? idx}`,
-                  user: randomUsername(`supa-${rec.id ?? idx}`),
-                  text: truncate(rec.text, 140),
-                  time: relativeTime(rec.created_at),
-                  is_toxic: rec.is_toxic,
-                  probability: rec.probability,
-                  labels: rec.labels ?? [],
-                  source: "recent",
-                }}
-              />
-            ))}
-            {/* Current session (just posted) */}
-            {[...sessionComments].reverse().map((c) => (
-              <CommentRow key={c.id} comment={c} />
-            ))}
+            {/* Persisted user comments for this video — always at the top (newest first) */}
+            {recentActivity
+              .filter((rec) => rec.source === "user_comment")
+              .map((rec, idx) => (
+                <CommentRow
+                  key={`recent-${rec.id ?? idx}`}
+                  comment={{
+                    id: `recent-${rec.id ?? idx}`,
+                    user: rec.author ?? randomUsername(`supa-${rec.id ?? idx}`),
+                    text: truncate(rec.text, 140),
+                    time: relativeTime(rec.created_at),
+                    is_toxic: rec.is_toxic,
+                    probability: rec.probability,
+                    labels: rec.labels ?? [],
+                    source: "recent",
+                  }}
+                />
+              ))}
+            {/* Optimistic local additions until refresh from Supabase completes */}
+            {[...sessionComments]
+              .reverse()
+              .filter(
+                (c) =>
+                  !recentActivity.some(
+                    (r) => r.text === c.text && r.author === c.user,
+                  ),
+              )
+              .map((c) => (
+                <CommentRow key={c.id} comment={c} />
+              ))}
             {/* YouTube fetched comments — below */}
             {youtubeComments.map((c) => (
               <CommentRow key={c.id} comment={c} />
@@ -312,7 +331,7 @@ export function WatchPage() {
           </div>
 
           {recentLoading && recentActivity.length === 0 && youtubeComments.length === 0 && (
-            <p className="loading-comments">Loading recent comments…</p>
+            <p className="loading-comments">{t.watch.loadingRecent}</p>
           )}
         </section>
 

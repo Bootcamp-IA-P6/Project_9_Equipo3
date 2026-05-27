@@ -37,10 +37,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function predict(text: string, threshold: number) {
+type PredictOptions = {
+  videoId?: string;
+  author?: string;
+  persist?: boolean;
+};
+
+export function predict(text: string, threshold: number, options: PredictOptions = {}) {
   return request<PredictResponse>("/predict", {
     method: "POST",
-    body: JSON.stringify({ text, threshold }),
+    body: JSON.stringify({
+      text,
+      threshold,
+      video_id: options.videoId,
+      author: options.author,
+      persist: options.persist ?? true,
+    }),
   });
 }
 
@@ -86,9 +98,10 @@ export function getSuggestedVideos() {
   return request<{ videos: SuggestedVideo[]; max_comments: number }>("/videos/suggested");
 }
 
-export function listPredictions(videoId?: string, limit = 20) {
+export function listPredictions(videoId?: string, limit = 200, source?: string) {
   const params = new URLSearchParams();
   if (videoId) params.set("video_id", videoId);
+  if (source) params.set("source", source);
   params.set("limit", String(limit));
   return request<PredictionsListResponse>(`/predictions?${params.toString()}`);
 }

@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n/I18nContext";
 import type { SuggestedVideo } from "../types/api";
 
 type Props = {
@@ -8,9 +9,10 @@ type Props = {
 };
 
 export function SuggestedRail({ videos, activeId, loadingId, onSelect }: Props) {
+  const { t } = useI18n();
   return (
     <aside className="suggested-rail">
-      <p className="rail-title">Up next</p>
+      <p className="rail-title">{t.watch.upNext}</p>
       {videos.map((v) => (
         <button
           key={v.id}
@@ -34,8 +36,8 @@ export function SuggestedRail({ videos, activeId, loadingId, onSelect }: Props) 
           <div className="suggested-info">
             <p className="suggested-title">{v.title}</p>
             <p className="suggested-channel">{v.channel_title}</p>
-            {!v.embeddable && <span className="embed-badge">External only</span>}
-            {loadingId === v.id && <span className="loading-tag">Loading comments…</span>}
+            {!v.embeddable && <span className="embed-badge">{t.watch.externalOnly}</span>}
+            {loadingId === v.id && <span className="loading-tag">{t.watch.loadingComments}</span>}
           </div>
         </button>
       ))}

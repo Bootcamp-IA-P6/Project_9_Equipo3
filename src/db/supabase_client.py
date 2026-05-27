@@ -51,6 +51,7 @@ def save_prediction(
     video_url: str | None = None,
     threshold: float | None = None,
     latency_ms: float | None = None,
+    author: str | None = None,
 ) -> None:
     """Persist a single prediction, silently no-op when DB is not configured.
 
@@ -87,6 +88,7 @@ def save_prediction(
             "threshold": threshold,
             "latency_ms": latency_ms if latency_ms is not None else data.get("latency_ms"),
             "source": source,
+            "author": author,
         }
         client.table(_TABLE).insert(row).execute()
     except Exception as exc:
@@ -96,6 +98,7 @@ def save_prediction(
 def list_predictions(
     video_id: str | None = None,
     limit: int = 50,
+    source: str | None = None,
 ) -> list[dict]:
     """Return latest predictions ordered by ``created_at`` desc.
 
@@ -109,6 +112,8 @@ def list_predictions(
         query = client.table(_TABLE).select("*").order("created_at", desc=True)
         if video_id:
             query = query.eq("video_id", video_id)
+        if source:
+            query = query.eq("source", source)
         query = query.limit(max(1, min(limit, 200)))
         response = query.execute()
         return list(getattr(response, "data", []) or [])

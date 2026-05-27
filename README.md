@@ -1,6 +1,11 @@
 <div align="center">
+<br />
 
 <img src="docs/assets/signalmod_logo.png" alt="SignalMod" width="520" />
+
+<br />
+
+<img src="docs/assets/qr.png" alt="Scan to open SignalMod" width="220" />
 
 ### Intelligent moderation for YouTube comments
 
@@ -13,6 +18,7 @@
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)
 ![Transformers](https://img.shields.io/badge/Transformers-5.9-FFD21E?logo=huggingface&logoColor=black)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8-F7931E?logo=scikitlearn&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Spaces-FFD21E?logo=huggingface&logoColor=black)
 ![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?logo=supabase&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 ![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=white)
@@ -302,11 +308,3 @@ More: see [docs/PIPELINE.md](docs/PIPELINE.md) for training, [docs/API.md](docs/
     </td>
   </tr>
 </table>
-
----
-
-<div align="center">
-
-**SignalMod** — Bootcamp IA P6 · Team 3 · 2026
-
-</div>

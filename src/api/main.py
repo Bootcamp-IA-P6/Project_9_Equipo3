@@ -117,6 +117,9 @@ def _mount_frontend() -> None:
             from fastapi import HTTPException
 
             raise HTTPException(status_code=404, detail="Not found")
+        static_file = FRONTEND_DIST / full_path
+        if full_path and static_file.is_file():
+            return FileResponse(static_file)
         index = FRONTEND_DIST / "index.html"
         if index.exists():
             return FileResponse(index)

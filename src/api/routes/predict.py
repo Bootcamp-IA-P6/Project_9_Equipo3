@@ -21,13 +21,16 @@ router = APIRouter(tags=["Prediction"])
 @router.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest):
     response = predict_single(request.text, request.threshold)
-    save_prediction(
-        text=request.text,
-        result=response,
-        source="api_direct",
-        threshold=request.threshold,
-        latency_ms=response.latency_ms,
-    )
+    if request.persist:
+        save_prediction(
+            text=request.text,
+            result=response,
+            source="user_comment" if request.author else "api_direct",
+            video_id=request.video_id,
+            author=request.author,
+            threshold=request.threshold,
+            latency_ms=response.latency_ms,
+        )
     return response
 
 
@@ -110,7 +113,8 @@ async def predict_video(request: VideoRequest):
 @router.get("/predictions")
 async def get_predictions(
     video_id: str | None = Query(default=None),
+    source: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
 ):
-    rows = list_predictions(video_id=video_id, limit=limit)
-    return rows
+    rows = list_predictions(video_id=video_id, source=source, limit=limit)
+    return {"predictions": rows, "total": len(rows)}
